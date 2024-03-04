@@ -8,12 +8,12 @@ import net.runelite.client.config.ConfigItem;
 public interface PartyGamesConfig extends Config
 {
 	@ConfigItem(
-		keyName = "greeting",
-		name = "Welcome Greeting",
-		description = "The message to show to the user when they login"
+		keyName = "viewOtherActiveGames",
+		name = "View other active games",
+		description = "View other active games"
 	)
-	default String greeting()
+	default boolean viewOtherActiveGames()
 	{
-		return "Hello";
+		return false;
 	}
 }

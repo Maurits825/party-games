@@ -1,20 +1,15 @@
-package com.partygames.ui;
+package com.partygames.RockPaperScissors;
 
-import com.partygames.PartyGamesPlugin;
-import com.partygames.data.ActiveGame;
 import com.partygames.data.Challenge;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButtonMenuItem;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
@@ -23,7 +18,7 @@ import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.util.ImageUtil;
 
-public class RockPaperScissorsBanner extends JPanel
+public class RockPaperScissorGamePanel extends JPanel
 {
 	private final JLabel name1 = new JLabel();
 	private final JLabel name2 = new JLabel();
@@ -34,14 +29,11 @@ public class RockPaperScissorsBanner extends JPanel
 	private final JButton paperButton = new JButton();
 	private final JButton scissorsButton = new JButton();
 
-	public RockPaperScissorsBanner(ActiveGame activeGame, PartyGamesPlugin plugin)
+	public RockPaperScissorGamePanel(RockPaperScissors rockPaperScissors)
 	{
-		Challenge challenge = activeGame.getChallenge();
+		Challenge challenge = rockPaperScissors.getChallenge();
 		PartyMember challenger = challenge.getChallenger();
 		PartyMember challengee = challenge.getChallengee();
-
-		setLayout(new BorderLayout());
-		setBorder(new EmptyBorder(0, 0, 0, 0));
 
 		final JPanel container = new JPanel();
 		container.setLayout(new BorderLayout());
@@ -51,7 +43,6 @@ public class RockPaperScissorsBanner extends JPanel
 		//contains icon and names
 		final JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
 		headerPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-//		headerPanel.setLayout(new BorderLayout());
 		headerPanel.setBorder(new EmptyBorder(0, 0, 3, 0));
 
 		SetAvatarStyle(avatar1, challenger);
@@ -73,9 +64,9 @@ public class RockPaperScissorsBanner extends JPanel
 		container.add(createMovesPanel(), BorderLayout.SOUTH);
 		add(container, BorderLayout.NORTH);
 
-		rockButton.addActionListener(e -> plugin.playMove("rock"));
-		paperButton.addActionListener(e -> plugin.playMove("paper"));
-		scissorsButton.addActionListener(e -> plugin.playMove("scissors"));
+		rockButton.addActionListener(e -> rockPaperScissors.move(RockPaperScissors.Move.ROCK));
+		paperButton.addActionListener(e -> rockPaperScissors.move(RockPaperScissors.Move.PAPER));
+		scissorsButton.addActionListener(e -> rockPaperScissors.move(RockPaperScissors.Move.SCISSORS));
 	}
 
 	private void SetAvatarStyle(JLabel avatar, PartyMember member)
