@@ -10,6 +10,7 @@ import net.runelite.client.party.messages.PartyMemberMessage;
 @EqualsAndHashCode(callSuper = true)
 public class MoveEvent extends PartyMemberMessage
 {
-	UUID challengeID;
+	long memberId;
+	UUID challengeId;
 	RockPaperScissors.Move move;
 }

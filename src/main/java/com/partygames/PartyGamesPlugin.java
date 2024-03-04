@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.PartyChanged;
 import net.runelite.client.party.PartyMember;
@@ -44,6 +45,9 @@ public class PartyGamesPlugin extends Plugin
 
 	@Inject
 	private ClientThread clientThread;
+
+	@Inject
+	private EventBus eventBus;
 
 	@Inject
 	private ClientToolbar clientToolbar;
@@ -184,7 +188,7 @@ public class PartyGamesPlugin extends Plugin
 			{
 				case ROCK_PAPER_SCISSORS:
 				default:
-					game = new RockPaperScissors(wsClient, partyService, panel);
+					game = new RockPaperScissors(wsClient, eventBus, partyService, panel);
 			}
 			game.initialize(challenge);
 

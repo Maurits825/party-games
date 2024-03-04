@@ -20,10 +20,17 @@ import net.runelite.client.util.ImageUtil;
 
 public class RockPaperScissorGamePanel extends JPanel
 {
+	private final RockPaperScissors rockPaperScissors;
+
 	private final JLabel name1 = new JLabel();
 	private final JLabel name2 = new JLabel();
 	private final JLabel avatar1 = new JLabel();
 	private final JLabel avatar2 = new JLabel();
+
+	private final JLabel status = new JLabel();
+
+	private final JPanel container = new JPanel();
+	private final JPanel movesPanel;
 
 	private final JButton rockButton = new JButton();
 	private final JButton paperButton = new JButton();
@@ -31,11 +38,12 @@ public class RockPaperScissorGamePanel extends JPanel
 
 	public RockPaperScissorGamePanel(RockPaperScissors rockPaperScissors)
 	{
+		this.rockPaperScissors = rockPaperScissors;
+
 		Challenge challenge = rockPaperScissors.getChallenge();
 		PartyMember challenger = challenge.getChallenger();
 		PartyMember challengee = challenge.getChallengee();
 
-		final JPanel container = new JPanel();
 		container.setLayout(new BorderLayout());
 		container.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		container.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -61,12 +69,36 @@ public class RockPaperScissorGamePanel extends JPanel
 
 		container.add(headerPanel, BorderLayout.NORTH);
 
-		container.add(createMovesPanel(), BorderLayout.SOUTH);
-		add(container, BorderLayout.NORTH);
+		movesPanel = createMovesPanel(rockPaperScissors);
+		container.add(movesPanel, BorderLayout.SOUTH);
+		if (!rockPaperScissors.isLocalPlayerMove())
+		{
+			movesPanel.setVisible(false);
+		}
 
-		rockButton.addActionListener(e -> rockPaperScissors.move(RockPaperScissors.Move.ROCK));
-		paperButton.addActionListener(e -> rockPaperScissors.move(RockPaperScissors.Move.PAPER));
-		scissorsButton.addActionListener(e -> rockPaperScissors.move(RockPaperScissors.Move.SCISSORS));
+		status.setText("Waiting player move");
+		container.add(status);
+
+		add(container, BorderLayout.NORTH);
+	}
+
+	public void update()
+	{
+		RockPaperScissors.State state = rockPaperScissors.getState();
+		movesPanel.setVisible(rockPaperScissors.isLocalPlayerMove());
+		//TODO show player move?
+		switch (state)
+		{
+			case PLAYER1_WIN:
+				status.setText("P1 win");
+				break;
+			case PLAYER2_WIN:
+				status.setText("P2 win");
+				break;
+			case WAITING_PLAYER_MOVE:
+				status.setText("Waiting player move");
+		}
+		container.revalidate();
 	}
 
 	private void SetAvatarStyle(JLabel avatar, PartyMember member)
@@ -81,7 +113,7 @@ public class RockPaperScissorGamePanel extends JPanel
 		avatar.setIcon(icon);
 	}
 
-	private JPanel createMovesPanel()
+	private JPanel createMovesPanel(RockPaperScissors rockPaperScissors)
 	{
 		JPanel movesPanel = new JPanel();
 		movesPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
@@ -98,6 +130,10 @@ public class RockPaperScissorGamePanel extends JPanel
 		scissorsButton.setText("Scissors");
 		scissorsButton.setFocusable(false);
 		movesPanel.add(scissorsButton);
+
+		rockButton.addActionListener(e -> rockPaperScissors.move(RockPaperScissors.Move.ROCK));
+		paperButton.addActionListener(e -> rockPaperScissors.move(RockPaperScissors.Move.PAPER));
+		scissorsButton.addActionListener(e -> rockPaperScissors.move(RockPaperScissors.Move.SCISSORS));
 
 		return movesPanel;
 	}
