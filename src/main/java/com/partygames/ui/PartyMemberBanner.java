@@ -26,14 +26,14 @@ public class PartyMemberBanner extends JPanel
 	public PartyMemberBanner(PartyMember member, PartyGamesPlugin plugin)
 	{
 		setLayout(new BorderLayout());
-		setBorder(new EmptyBorder(5, 5, 5, 5));
+		setBorder(new EmptyBorder(5, 5, 0, 5));
 		setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
 		/* The box's wrapping container */
 		final JPanel container = new JPanel();
 		container.setLayout(new BorderLayout());
 		container.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		container.setBorder(new EmptyBorder(5, 5, 5, 5));
+		container.setBorder(new EmptyBorder(0, 0, 1, 0));
 
 		Border border = BorderFactory.createLineBorder(Color.gray, 1);
 		avatar.setBorder(border);
@@ -41,9 +41,13 @@ public class PartyMemberBanner extends JPanel
 		avatar.setHorizontalAlignment(SwingConstants.CENTER);
 		avatar.setVerticalAlignment(SwingConstants.CENTER);
 		avatar.setPreferredSize(new Dimension(35, 35));
-		ImageIcon icon = new ImageIcon(ImageUtil.resizeImage(member.getAvatar(), 32, 32));
-		icon.getImage().flush();
-		avatar.setIcon(icon);
+
+		if (member.getAvatar() != null)
+		{
+			ImageIcon icon = new ImageIcon(ImageUtil.resizeImage(member.getAvatar(), 32, 32));
+			icon.getImage().flush();
+			avatar.setIcon(icon);
+		}
 
 		/* Contains the avatar and the names */
 		final JPanel headerPanel = new JPanel();
@@ -67,7 +71,7 @@ public class PartyMemberBanner extends JPanel
 
 		container.add(headerPanel, BorderLayout.NORTH);
 		add(container, BorderLayout.NORTH);
-		
+
 		challengeButton.addActionListener(e -> plugin.challengeMember(member));
 	}
 }

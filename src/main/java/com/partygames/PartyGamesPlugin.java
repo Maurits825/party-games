@@ -1,18 +1,23 @@
 package com.partygames;
 
 import com.google.inject.Provides;
+import com.partygames.data.ActiveGame;
 import com.partygames.data.Challenge;
+import com.partygames.data.GameType;
+import com.partygames.data.events.AcceptChallengeEvent;
 import com.partygames.data.events.ChallengeEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import javax.inject.Inject;
+import javax.swing.SwingUtilities;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.PartyChanged;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.party.PartyService;
 import net.runelite.client.party.WSClient;
@@ -35,6 +40,9 @@ public class PartyGamesPlugin extends Plugin
 	private Client client;
 
 	@Inject
+	private ClientThread clientThread;
+
+	@Inject
 	private ClientToolbar clientToolbar;
 
 	@Inject
@@ -54,12 +62,15 @@ public class PartyGamesPlugin extends Plugin
 	private List<PartyMember> partyMembers;
 
 	@Getter
-	private List<Challenge> activeChallenges = new ArrayList<>();
+	private List<Challenge> activeChallenges;
+	@Getter
+	private List<ActiveGame> activeGames;
 
 	@Override
 	protected void startUp() throws Exception
 	{
 		activeChallenges = new ArrayList<>();
+		activeGames = new ArrayList<>();
 
 		panel = new PartyGamesPanel(this);
 		navButton = NavigationButton.builder()
@@ -73,10 +84,11 @@ public class PartyGamesPlugin extends Plugin
 
 		if (partyService.isInParty())
 		{
-			UpdatePartyMembers();
+			updatePartyMembers();
 		}
 
 		wsClient.registerMessage(ChallengeEvent.class);
+		wsClient.registerMessage(AcceptChallengeEvent.class);
 	}
 
 	@Override
@@ -84,23 +96,37 @@ public class PartyGamesPlugin extends Plugin
 	{
 		clientToolbar.removeNavigation(navButton);
 		wsClient.unregisterMessage(ChallengeEvent.class);
+		wsClient.unregisterMessage(AcceptChallengeEvent.class);
 	}
 
 	@Subscribe
 	public void onUserSync(final UserSync event)
 	{
-		log.debug("user sync!");
+		this.updatePartyMembers();
+	}
+
+	@Subscribe
+	public void onPartyChanged(final PartyChanged event)
+	{
+		this.updatePartyMembers();
 	}
 
 	public void challengeMember(PartyMember member)
 	{
 		log.debug("send challenge event");
-		partyService.send(new ChallengeEvent(partyService.getLocalMember().getMemberId(), member.getMemberId()));
+		GameType gameType = GameType.ROCK_PAPER_SCISSORS; //default rps for now
+		partyService.send(new ChallengeEvent(partyService.getLocalMember().getMemberId(), member.getMemberId(), gameType));
 	}
 
 	public void acceptChallenge(Challenge challenge)
 	{
 		log.debug("accept challenge");
+		partyService.send(new AcceptChallengeEvent(challenge.getChallengeEvent().getChallengeId()));
+	}
+
+	public void playMove(String move)
+	{
+		log.debug("play move: " + move);
 	}
 
 	@Subscribe
@@ -112,10 +138,40 @@ public class PartyGamesPlugin extends Plugin
 		panel.updateChallenges(activeChallenges);
 	}
 
-	private void UpdatePartyMembers()
+	@Subscribe
+	public void onAcceptChallengeEvent(AcceptChallengeEvent acceptChallengeEvent)
 	{
-		partyMembers = partyService.getMembers();
-		panel.updateParty(partyMembers);
+		log.debug("on accept challenge event");
+		Challenge challenge = null;
+		for (Challenge c : activeChallenges)
+		{
+			if (c.getChallengeEvent().getChallengeId().equals(acceptChallengeEvent.getChallengeId()))
+			{
+				challenge = c;
+				break;
+			}
+		}
+
+		if (challenge == null)
+		{
+			return;
+		}
+
+		long localMemberId = partyService.getLocalMember().getMemberId();
+		ChallengeEvent challengeEvent = challenge.getChallengeEvent();
+		if (localMemberId == challengeEvent.getFromId() || localMemberId == challengeEvent.getToId())
+		{
+			activeChallenges.remove(challenge);
+			activeGames.add(new ActiveGame(challenge));
+			panel.updateChallenges(activeChallenges);
+			panel.updateActiveGames(activeGames);
+		}
+	}
+
+	private void updatePartyMembers()
+	{
+		partyMembers = partyService.getMembers();//TODO when joining party dont have the name data yet here
+		SwingUtilities.invokeLater(() -> panel.updateParty(partyMembers));
 	}
 
 	@Provides

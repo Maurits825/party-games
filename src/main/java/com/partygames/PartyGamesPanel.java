@@ -1,9 +1,10 @@
 package com.partygames;
 
+import com.partygames.data.ActiveGame;
 import com.partygames.data.Challenge;
-import com.partygames.data.events.ChallengeEvent;
 import com.partygames.ui.ChallengeBanner;
 import com.partygames.ui.PartyMemberBanner;
+import com.partygames.ui.RockPaperScissorsBanner;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -20,6 +21,7 @@ import javax.swing.border.EmptyBorder;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.ui.components.DragAndDropReorderPane;
 
@@ -31,11 +33,13 @@ public class PartyGamesPanel extends PluginPanel
 	private final JButton readyButton = new JButton();
 	private final JButton testButton = new JButton();
 
-	private JComponent partyMembersPanel = new DragAndDropReorderPane();
-	private JComponent challengesPanel = new DragAndDropReorderPane();
+	private final JComponent partyMembersPanel = new DragAndDropReorderPane();
+	private final JComponent challengesPanel = new DragAndDropReorderPane();
+	private final JComponent activeGamesPanel = new DragAndDropReorderPane();
 
-	private List<PartyMemberBanner> partyMemberBanners = new ArrayList<>();
-	private List<ChallengeBanner> challengeBanners = new ArrayList<>();
+	private final List<PartyMemberBanner> partyMemberBanners = new ArrayList<>();
+	private final List<ChallengeBanner> challengeBanners = new ArrayList<>();
+	private final List<RockPaperScissorsBanner> rockPaperScissorsBanners = new ArrayList<>();
 
 	@Inject
 	PartyGamesPanel(final PartyGamesPlugin plugin)
@@ -70,12 +74,13 @@ public class PartyGamesPanel extends PluginPanel
 		readyButton.setText("Ready");
 		readyButton.setFocusable(false);
 
-		testButton.setText("Test");
+		testButton.setText("Refresh");
 		testButton.setFocusable(false);
 
 		layoutPanel.add(topPanel);
 		layoutPanel.add(partyMembersPanel);
 		layoutPanel.add(challengesPanel);
+		layoutPanel.add(activeGamesPanel);
 
 		readyButton.addActionListener(e ->
 		{
@@ -84,8 +89,10 @@ public class PartyGamesPanel extends PluginPanel
 
 		testButton.addActionListener(e ->
 		{
-			log.info("test button");
+			log.info("refresh view");
 			updateParty(plugin.getPartyMembers());
+			updateChallenges(plugin.getActiveChallenges());
+			updateActiveGames(plugin.getActiveGames());
 		});
 	}
 
@@ -94,9 +101,8 @@ public class PartyGamesPanel extends PluginPanel
 		partyMembersPanel.removeAll();
 		partyMemberBanners.clear();
 
-		JLabel header = new JLabel();
-		header.setText("Members");
-		partyMembersPanel.add(header);
+		JPanel headerPanel = getHeaderTextPanel("Members");
+		partyMembersPanel.add(headerPanel);
 
 		for (PartyMember member : partyMembers)
 		{
@@ -105,17 +111,17 @@ public class PartyGamesPanel extends PluginPanel
 			partyMemberBanners.add(memberBanner);
 			partyMembersPanel.add(memberBanner);
 		}
+
+		partyMembersPanel.revalidate();
 	}
 
 	public void updateChallenges(List<Challenge> challenges)
 	{
-		//just redraw everything for now
 		challengesPanel.removeAll();
 		challengeBanners.clear();
 
-		JLabel header = new JLabel();
-		header.setText("Challenges");
-		challengesPanel.add(header);
+		JPanel headerPanel = getHeaderTextPanel("Challenges");
+		challengesPanel.add(headerPanel);
 
 		for (Challenge challenge : challenges)
 		{
@@ -125,5 +131,36 @@ public class PartyGamesPanel extends PluginPanel
 		}
 
 		challengesPanel.revalidate();
+	}
+
+	public void updateActiveGames(List<ActiveGame> activeGames)
+	{
+		activeGamesPanel.removeAll();
+		rockPaperScissorsBanners.clear();
+
+		JPanel headerPanel = getHeaderTextPanel("Active Games");
+		activeGamesPanel.add(headerPanel);
+
+		for (ActiveGame activeGame : activeGames)
+		{
+			RockPaperScissorsBanner banner = new RockPaperScissorsBanner(activeGame, plugin);
+			rockPaperScissorsBanners.add(banner);
+			activeGamesPanel.add(banner);
+		}
+
+		activeGamesPanel.revalidate();
+	}
+
+	private JPanel getHeaderTextPanel(String text)
+	{
+		JLabel headerText = new JLabel();
+		headerText.setText(text);
+
+		final JPanel headerPanel = new JPanel();
+		headerPanel.setLayout(new DynamicGridLayout(1, 1));
+		headerPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		headerPanel.setBorder(new EmptyBorder(5, 5, 0, 5));
+		headerPanel.add(headerText, BorderLayout.CENTER);
+		return headerPanel;
 	}
 }
