@@ -1,15 +1,16 @@
 package com.partygames;
 
 import com.google.inject.Provides;
+import com.partygames.data.Challenge;
+import com.partygames.data.events.ChallengeEvent;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import javax.inject.Inject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
-import net.runelite.api.GameState;
-import net.runelite.api.events.GameStateChanged;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.party.PartyMember;
@@ -37,6 +38,7 @@ public class PartyGamesPlugin extends Plugin
 	private ClientToolbar clientToolbar;
 
 	@Inject
+	@Getter
 	private PartyService partyService;
 
 	@Inject
@@ -51,9 +53,14 @@ public class PartyGamesPlugin extends Plugin
 	@Getter
 	private List<PartyMember> partyMembers;
 
+	@Getter
+	private List<Challenge> activeChallenges = new ArrayList<>();
+
 	@Override
 	protected void startUp() throws Exception
 	{
+		activeChallenges = new ArrayList<>();
+
 		panel = new PartyGamesPanel(this);
 		navButton = NavigationButton.builder()
 			.tooltip("Party Games")
@@ -67,14 +74,16 @@ public class PartyGamesPlugin extends Plugin
 		if (partyService.isInParty())
 		{
 			UpdatePartyMembers();
-			panel.updateParty(partyMembers);
 		}
+
+		wsClient.registerMessage(ChallengeEvent.class);
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
 		clientToolbar.removeNavigation(navButton);
+		wsClient.unregisterMessage(ChallengeEvent.class);
 	}
 
 	@Subscribe
@@ -83,9 +92,30 @@ public class PartyGamesPlugin extends Plugin
 		log.debug("user sync!");
 	}
 
+	public void challengeMember(PartyMember member)
+	{
+		log.debug("send challenge event");
+		partyService.send(new ChallengeEvent(partyService.getLocalMember().getMemberId(), member.getMemberId()));
+	}
+
+	public void acceptChallenge(Challenge challenge)
+	{
+		log.debug("accept challenge");
+	}
+
+	@Subscribe
+	public void onChallengeEvent(ChallengeEvent event)
+	{
+		log.debug("on challenge event");
+		Challenge challenge = new Challenge(partyService.getMemberById(event.getFromId()), partyService.getMemberById(event.getToId()), event);
+		activeChallenges.add(challenge);
+		panel.updateChallenges(activeChallenges);
+	}
+
 	private void UpdatePartyMembers()
 	{
 		partyMembers = partyService.getMembers();
+		panel.updateParty(partyMembers);
 	}
 
 	@Provides

@@ -1,6 +1,8 @@
 package com.partygames.ui;
 
 import com.partygames.PartyGamesPlugin;
+import com.partygames.data.Challenge;
+import com.partygames.data.events.ChallengeEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -13,27 +15,26 @@ import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import net.runelite.client.party.PartyMember;
+import net.runelite.client.party.PartyService;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.util.ImageUtil;
 
-public class PartyMemberBanner extends JPanel
+public class ChallengeBanner extends JPanel
 {
 	private final JLabel name = new JLabel();
 	private final JLabel avatar = new JLabel();
-	private final JButton challengeButton = new JButton();
+	private final JButton acceptButton = new JButton();
+	private final JLabel pendingLabel = new JLabel();
 
-	public PartyMemberBanner(PartyMember member, PartyGamesPlugin plugin)
+	public ChallengeBanner(Challenge challenge, PartyGamesPlugin plugin)
 	{
+		PartyMember challenger = challenge.getChallenger();
+		PartyMember challengee = challenge.getChallengee();
+
 		setLayout(new BorderLayout());
 		setBorder(new EmptyBorder(5, 5, 5, 5));
 		setBackground(ColorScheme.DARKER_GRAY_COLOR);
-
-		/* The box's wrapping container */
-		final JPanel container = new JPanel();
-		container.setLayout(new BorderLayout());
-		container.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		container.setBorder(new EmptyBorder(5, 5, 5, 5));
 
 		Border border = BorderFactory.createLineBorder(Color.gray, 1);
 		avatar.setBorder(border);
@@ -41,33 +42,32 @@ public class PartyMemberBanner extends JPanel
 		avatar.setHorizontalAlignment(SwingConstants.CENTER);
 		avatar.setVerticalAlignment(SwingConstants.CENTER);
 		avatar.setPreferredSize(new Dimension(35, 35));
-		ImageIcon icon = new ImageIcon(ImageUtil.resizeImage(member.getAvatar(), 32, 32));
+		ImageIcon icon = new ImageIcon(ImageUtil.resizeImage(challenger.getAvatar(), 32, 32));
 		icon.getImage().flush();
 		avatar.setIcon(icon);
-
-		/* Contains the avatar and the names */
-		final JPanel headerPanel = new JPanel();
-		headerPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		headerPanel.setLayout(new BorderLayout());
-		headerPanel.setBorder(new EmptyBorder(0, 0, 3, 0));
+		add(avatar, BorderLayout.WEST);
 
 		final JPanel namesPanel = new JPanel();
 		namesPanel.setLayout(new DynamicGridLayout(2, 1));
 		namesPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		namesPanel.setBorder(new EmptyBorder(2, 5, 2, 5));
-		name.setText(member.getDisplayName());
-		namesPanel.add(name);
+		name.setText(challenger.getDisplayName() + " -> " + challengee.getDisplayName());
+		namesPanel.add(name, BorderLayout.CENTER);
+		add(namesPanel);
 
-		headerPanel.add(avatar, BorderLayout.WEST);
-		headerPanel.add(namesPanel, BorderLayout.CENTER);
+		boolean isLocalPlayer = plugin.getPartyService().getLocalMember().getMemberId() == challenger.getMemberId();
+		if (isLocalPlayer)
+		{
+			pendingLabel.setText("Pending");
+			add(pendingLabel, BorderLayout.EAST);
+		}
+		else
+		{
+			acceptButton.setText("Accept");
+			acceptButton.setFocusable(false);
+			add(acceptButton, BorderLayout.EAST);
+		}
 
-		challengeButton.setText("Challenge");
-		challengeButton.setFocusable(false);
-		headerPanel.add(challengeButton, BorderLayout.EAST);
-
-		container.add(headerPanel, BorderLayout.NORTH);
-		add(container, BorderLayout.NORTH);
-		
-		challengeButton.addActionListener(e -> plugin.challengeMember(member));
+		acceptButton.addActionListener(e -> plugin.acceptChallenge(challenge));
 	}
 }

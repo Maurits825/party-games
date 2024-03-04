@@ -1,10 +1,14 @@
 package com.partygames;
 
+import com.partygames.data.Challenge;
+import com.partygames.data.events.ChallengeEvent;
+import com.partygames.ui.ChallengeBanner;
 import com.partygames.ui.PartyMemberBanner;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 import javax.swing.BoxLayout;
@@ -17,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
+import net.runelite.client.ui.components.DragAndDropReorderPane;
 
 @Slf4j
 public class PartyGamesPanel extends PluginPanel
@@ -26,7 +31,11 @@ public class PartyGamesPanel extends PluginPanel
 	private final JButton readyButton = new JButton();
 	private final JButton testButton = new JButton();
 
-	private JPanel partyMembersPanel = new JPanel();
+	private JComponent partyMembersPanel = new DragAndDropReorderPane();
+	private JComponent challengesPanel = new DragAndDropReorderPane();
+
+	private List<PartyMemberBanner> partyMemberBanners = new ArrayList<>();
+	private List<ChallengeBanner> challengeBanners = new ArrayList<>();
 
 	@Inject
 	PartyGamesPanel(final PartyGamesPlugin plugin)
@@ -66,6 +75,7 @@ public class PartyGamesPanel extends PluginPanel
 
 		layoutPanel.add(topPanel);
 		layoutPanel.add(partyMembersPanel);
+		layoutPanel.add(challengesPanel);
 
 		readyButton.addActionListener(e ->
 		{
@@ -75,17 +85,45 @@ public class PartyGamesPanel extends PluginPanel
 		testButton.addActionListener(e ->
 		{
 			log.info("test button");
+			updateParty(plugin.getPartyMembers());
 		});
 	}
 
 	public void updateParty(List<PartyMember> partyMembers)
 	{
 		partyMembersPanel.removeAll();
+		partyMemberBanners.clear();
+
+		JLabel header = new JLabel();
+		header.setText("Members");
+		partyMembersPanel.add(header);
 
 		for (PartyMember member : partyMembers)
 		{
-			JPanel memberBanner = new PartyMemberBanner(member);
+			log.debug("party member: " + member.getDisplayName());
+			PartyMemberBanner memberBanner = new PartyMemberBanner(member, plugin);
+			partyMemberBanners.add(memberBanner);
 			partyMembersPanel.add(memberBanner);
 		}
+	}
+
+	public void updateChallenges(List<Challenge> challenges)
+	{
+		//just redraw everything for now
+		challengesPanel.removeAll();
+		challengeBanners.clear();
+
+		JLabel header = new JLabel();
+		header.setText("Challenges");
+		challengesPanel.add(header);
+
+		for (Challenge challenge : challenges)
+		{
+			ChallengeBanner challengeBanner = new ChallengeBanner(challenge, plugin);
+			challengeBanners.add(challengeBanner);
+			challengesPanel.add(challengeBanner);
+		}
+
+		challengesPanel.revalidate();
 	}
 }
