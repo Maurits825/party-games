@@ -1,10 +1,8 @@
 package com.partygames.RockPaperScissors;
 
-import com.partygames.PartyGamesPanel;
 import com.partygames.RockPaperScissors.events.MoveEvent;
 import com.partygames.data.Challenge;
 import com.partygames.data.Game;
-import java.util.HashMap;
 import java.util.Map;
 import javax.inject.Inject;
 import lombok.Data;
@@ -13,17 +11,26 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.party.PartyMember;
 import net.runelite.client.party.PartyService;
 import net.runelite.client.party.WSClient;
 
 @Slf4j
 public class RockPaperScissors implements Game
 {
+	@Getter
 	public enum Move
 	{
-		ROCK,
-		PAPER,
-		SCISSORS,
+		ROCK("Rock"),
+		PAPER("Paper"),
+		SCISSORS("Scissors");
+
+		private final String text;
+
+		Move(final String text)
+		{
+			this.text = text;
+		}
 	}
 
 	public enum State
@@ -48,34 +55,36 @@ public class RockPaperScissors implements Game
 	{
 		public Move move = null;
 		public final boolean isLocalPlayer;
-		public final String name;
+		public final PartyMember member;
 	}
+
+	private Player player1;
+	private Player player2;
 
 	@Getter
 	private State state = State.WAITING_PLAYER_MOVE;
 	private Challenge challenge;
 
-	private RockPaperScissorGamePanel gamePanel;
-
 	private final WSClient wsClient;
 	private final EventBus eventBus;
 	private final PartyService partyService;
-	private final PartyGamesPanel panel;
+	private final RockPaperScissorsPanel panel;
 
 	private final long localPlayerId;
 
 	@Getter
 	private boolean isLocalPlayerMove;
 
-	private Map<Long, Player> players;
-
 	@Inject
-	public RockPaperScissors(WSClient wsClient, EventBus eventBus, PartyService partyService, PartyGamesPanel panel)
+	public RockPaperScissors(WSClient wsClient, EventBus eventBus, PartyService partyService, RockPaperScissorsPanel panel)
 	{
 		this.wsClient = wsClient;
 		this.eventBus = eventBus;
 		this.partyService = partyService;
 		this.panel = panel;
+
+		eventBus.register(this);
+		wsClient.registerMessage(MoveEvent.class);
 
 		localPlayerId = partyService.getLocalMember().getMemberId();
 	}
@@ -90,16 +99,13 @@ public class RockPaperScissors implements Game
 	public void initialize(Challenge challenge)
 	{
 		this.challenge = challenge;
-		isLocalPlayerMove = localPlayerId == challenge.getChallenger().getMemberId() || localPlayerId == challenge.getChallengee().getMemberId();
+		isLocalPlayerMove = true;
+		state = State.WAITING_PLAYER_MOVE;
 
-		players = new HashMap<>();
-		players.put(challenge.getChallenger().getMemberId(), new Player(challenge.getChallenger().getMemberId() == localPlayerId, challenge.getChallenger().getDisplayName()));
-		players.put(challenge.getChallengee().getMemberId(), new Player(challenge.getChallengee().getMemberId() == localPlayerId, challenge.getChallengee().getDisplayName()));
+		player1 = new Player(challenge.getChallenger().getMemberId() == localPlayerId, challenge.getChallenger());
+		player2 = new Player(challenge.getChallengee().getMemberId() == localPlayerId, challenge.getChallengee());
 
-		eventBus.register(this);
-		wsClient.registerMessage(MoveEvent.class);
-
-		gamePanel = panel.getRockPaperScissorsPanel().addRPSGame(this);
+		panel.initialize(this);
 	}
 
 	@Override
@@ -119,27 +125,16 @@ public class RockPaperScissors implements Game
 		}
 
 		long moveMemberId = event.getMemberId();
-		if (players.containsKey(moveMemberId))
+		Player playerUpdate = player1.member.getMemberId() == moveMemberId ? player1 : player2;
+		playerUpdate.move = event.getMove();
+		isLocalPlayerMove = isLocalPlayerMove && !playerUpdate.isLocalPlayer;
+
+		if (player1.move != null && player2.move != null)
 		{
-			Player player = players.get(moveMemberId);
-			if (player.move == null)
-			{
-				player.move = event.getMove();
-				isLocalPlayerMove = isLocalPlayerMove && moveMemberId != localPlayerId;
-				gamePanel.update();
-			}
+			state = play();
 		}
 
-		for (Player player : players.values())
-		{
-			if (player.move == null)
-			{
-				return;
-			}
-		}
-
-		state = play();
-		gamePanel.update();
+		panel.update(this);
 	}
 
 	public void move(Move move)
@@ -152,9 +147,6 @@ public class RockPaperScissors implements Game
 
 	public String getStatusText()
 	{
-		Player player1 = players.get(challenge.getChallenger().getMemberId());
-		Player player2 = players.get(challenge.getChallengee().getMemberId());
-
 		String p1Move = getPlayerMove(player1);
 		String p2Move = getPlayerMove(player2);
 
@@ -164,10 +156,10 @@ public class RockPaperScissors implements Game
 			case WAITING_PLAYER_MOVE:
 				break;
 			case PLAYER1_WIN:
-				status += ": " + player1.name + " won!";
+				status += ": " + player1.getMember().getDisplayName() + " won!";
 				break;
 			case PLAYER2_WIN:
-				status += ": " + player2.name + " won!";
+				status += ": " + player2.getMember().getDisplayName() + " won!";
 				break;
 			case DRAW:
 				status += ": draw!";
@@ -189,8 +181,8 @@ public class RockPaperScissors implements Game
 
 	private State play()
 	{
-		Move p1Move = players.get(challenge.getChallenger().getMemberId()).move;
-		Move p2Move = players.get(challenge.getChallengee().getMemberId()).move;
+		Move p1Move = player1.move;
+		Move p2Move = player2.move;
 
 		if (p1Move == p2Move)
 		{

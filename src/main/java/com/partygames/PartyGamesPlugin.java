@@ -71,19 +71,16 @@ public class PartyGamesPlugin extends Plugin
 	@Getter
 	private List<Challenge> activeChallenges;
 	@Getter
-	private final Map<GameType, List<Game>> activeGames = new HashMap<>();
+	private final Map<GameType, Game> activeGames = new HashMap<>();
 
 	@Override
 	protected void startUp() throws Exception
 	{
+		panel = injector.getInstance(PartyGamesPanel.class);
+
 		activeChallenges = new ArrayList<>();
 		activeGames.clear();
-		for (GameType gameType : GameType.values())
-		{
-			activeGames.put(gameType, new ArrayList<>());
-		}
 
-		panel = injector.getInstance(PartyGamesPanel.class);
 		navButton = NavigationButton.builder()
 			.tooltip("Party Games")
 			.icon(ICON)
@@ -109,12 +106,9 @@ public class PartyGamesPlugin extends Plugin
 		wsClient.unregisterMessage(ChallengeEvent.class);
 		wsClient.unregisterMessage(AcceptChallengeEvent.class);
 
-		for (List<Game> games : activeGames.values())
+		for (Game game : activeGames.values())
 		{
-			for (Game game : games)
-			{
-				game.shutDown();
-			}
+			game.shutDown();
 		}
 	}
 
@@ -176,18 +170,24 @@ public class PartyGamesPlugin extends Plugin
 		activeChallenges.remove(challenge);
 		panel.getPartyGamesLobbyPanel().updateChallenges(activeChallenges);
 
-		if (config.viewOtherActiveGames() || (localMemberId == challengeEvent.getFromId() || localMemberId == challengeEvent.getToId()))
+		if (localMemberId == challengeEvent.getFromId() || localMemberId == challengeEvent.getToId())
 		{
-			Game game;
-			switch (challengeEvent.getGameType())
+			GameType gameType = challengeEvent.getGameType();
+			if (!activeGames.containsKey(gameType))
 			{
-				case ROCK_PAPER_SCISSORS:
-				default:
-					game = new RockPaperScissors(wsClient, eventBus, partyService, panel);
+				activeGames.put(gameType, getGame(gameType));
 			}
-			game.initialize(challenge);
+			activeGames.get(gameType).initialize(challenge);
+		}
+	}
 
-			activeGames.get(challengeEvent.getGameType()).add(game);
+	private Game getGame(GameType gameType)
+	{
+		switch (gameType)
+		{
+			case ROCK_PAPER_SCISSORS:
+			default:
+				return new RockPaperScissors(wsClient, eventBus, partyService, panel.getRockPaperScissorsPanel());
 		}
 	}
 
