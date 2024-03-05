@@ -4,8 +4,12 @@ import com.partygames.PartyGamesPanel;
 import com.partygames.RockPaperScissors.events.MoveEvent;
 import com.partygames.data.Challenge;
 import com.partygames.data.Game;
+import java.util.HashMap;
+import java.util.Map;
 import javax.inject.Inject;
+import lombok.Data;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
@@ -25,8 +29,26 @@ public class RockPaperScissors implements Game
 	public enum State
 	{
 		WAITING_PLAYER_MOVE,
+		DRAW,
 		PLAYER1_WIN,
 		PLAYER2_WIN,
+	}
+
+	private final Map<Move, Move> winRules = Map.of(
+		Move.ROCK, Move.SCISSORS,
+		Move.SCISSORS, Move.PAPER,
+		Move.PAPER, Move.ROCK
+	);
+
+	private final String MOVE_CENSOR = "???";
+
+	@Data
+	@RequiredArgsConstructor
+	private class Player
+	{
+		public Move move = null;
+		public final boolean isLocalPlayer;
+		public final String name;
 	}
 
 	@Getter
@@ -45,8 +67,7 @@ public class RockPaperScissors implements Game
 	@Getter
 	private boolean isLocalPlayerMove;
 
-	private Move challengerMove;
-	private Move challengeeMove;
+	private Map<Long, Player> players;
 
 	@Inject
 	public RockPaperScissors(WSClient wsClient, EventBus eventBus, PartyService partyService, PartyGamesPanel panel)
@@ -71,8 +92,13 @@ public class RockPaperScissors implements Game
 		this.challenge = challenge;
 		isLocalPlayerMove = localPlayerId == challenge.getChallenger().getMemberId() || localPlayerId == challenge.getChallengee().getMemberId();
 
+		players = new HashMap<>();
+		players.put(challenge.getChallenger().getMemberId(), new Player(challenge.getChallenger().getMemberId() == localPlayerId, challenge.getChallenger().getDisplayName()));
+		players.put(challenge.getChallengee().getMemberId(), new Player(challenge.getChallengee().getMemberId() == localPlayerId, challenge.getChallengee().getDisplayName()));
+
 		eventBus.register(this);
 		wsClient.registerMessage(MoveEvent.class);
+
 		gamePanel = panel.getRockPaperScissorsPanel().addRPSGame(this);
 	}
 
@@ -92,23 +118,27 @@ public class RockPaperScissors implements Game
 			return;
 		}
 
-		//todo make this simpler/better??
-		if (event.getMemberId() == challenge.getChallenger().getMemberId())
+		long moveMemberId = event.getMemberId();
+		if (players.containsKey(moveMemberId))
 		{
-			challengerMove = event.getMove();
-			isLocalPlayerMove = isLocalPlayerMove && challenge.getChallenger().getMemberId() != localPlayerId;
-		}
-		else if (event.getMemberId() == challenge.getChallengee().getMemberId())
-		{
-			challengeeMove = event.getMove();
-			isLocalPlayerMove = isLocalPlayerMove && challenge.getChallenger().getMemberId() != localPlayerId;
+			Player player = players.get(moveMemberId);
+			if (player.move == null)
+			{
+				player.move = event.getMove();
+				isLocalPlayerMove = isLocalPlayerMove && moveMemberId != localPlayerId;
+				gamePanel.update();
+			}
 		}
 
-		if (challengerMove != null && challengeeMove != null)
+		for (Player player : players.values())
 		{
-			play();
+			if (player.move == null)
+			{
+				return;
+			}
 		}
-	
+
+		state = play();
 		gamePanel.update();
 	}
 
@@ -120,9 +150,60 @@ public class RockPaperScissors implements Game
 		}
 	}
 
-	private void play()
+	public String getStatusText()
 	{
-		//TODO do rps game
-		state = State.PLAYER1_WIN;
+		Player player1 = players.get(challenge.getChallenger().getMemberId());
+		Player player2 = players.get(challenge.getChallengee().getMemberId());
+
+		String p1Move = getPlayerMove(player1);
+		String p2Move = getPlayerMove(player2);
+
+		String status = p1Move + " vs " + p2Move;
+		switch (state)
+		{
+			case WAITING_PLAYER_MOVE:
+				break;
+			case PLAYER1_WIN:
+				status += ": " + player1.name + " won!";
+				break;
+			case PLAYER2_WIN:
+				status += ": " + player2.name + " won!";
+				break;
+			case DRAW:
+				status += ": draw!";
+				break;
+		}
+
+		return status;
+	}
+
+	private String getPlayerMove(Player player)
+	{
+		String move = MOVE_CENSOR;
+		if (state != State.WAITING_PLAYER_MOVE || (player.isLocalPlayer && player.move != null))
+		{
+			move = player.move.name();
+		}
+		return move;
+	}
+
+	private State play()
+	{
+		Move p1Move = players.get(challenge.getChallenger().getMemberId()).move;
+		Move p2Move = players.get(challenge.getChallengee().getMemberId()).move;
+
+		if (p1Move == p2Move)
+		{
+			return State.DRAW;
+		}
+
+		if (winRules.get(p1Move) == p2Move)
+		{
+			return State.PLAYER1_WIN;
+		}
+		else
+		{
+			return State.PLAYER2_WIN;
+		}
 	}
 }

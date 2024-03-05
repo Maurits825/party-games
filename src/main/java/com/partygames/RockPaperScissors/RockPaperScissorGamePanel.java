@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -15,7 +16,6 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.ui.ColorScheme;
-import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.util.ImageUtil;
 
 public class RockPaperScissorGamePanel extends JPanel
@@ -44,14 +44,16 @@ public class RockPaperScissorGamePanel extends JPanel
 		PartyMember challenger = challenge.getChallenger();
 		PartyMember challengee = challenge.getChallengee();
 
-		container.setLayout(new BorderLayout());
+		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		setBorder(new EmptyBorder(5, 0, 0, 0));
+		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
 		container.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		container.setBorder(new EmptyBorder(5, 5, 5, 5));
 
 		//contains icon and names
 		final JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
 		headerPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		headerPanel.setBorder(new EmptyBorder(0, 0, 3, 0));
+		headerPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
 
 		SetAvatarStyle(avatar1, challenger);
 		SetAvatarStyle(avatar2, challengee);
@@ -67,37 +69,29 @@ public class RockPaperScissorGamePanel extends JPanel
 		name2.setText(challengee.getDisplayName());
 		headerPanel.add(name2);
 
-		container.add(headerPanel, BorderLayout.NORTH);
-
+		container.add(headerPanel);
 		movesPanel = createMovesPanel(rockPaperScissors);
-		container.add(movesPanel, BorderLayout.SOUTH);
+		container.add(movesPanel);
+
 		if (!rockPaperScissors.isLocalPlayerMove())
 		{
 			movesPanel.setVisible(false);
 		}
 
-		status.setText("Waiting player move");
-		container.add(status);
+		final JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
+		footerPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		footerPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
+		status.setText(rockPaperScissors.getStatusText());
+		footerPanel.add(status);
 
-		add(container, BorderLayout.NORTH);
+		container.add(footerPanel);
+		add(container);
 	}
 
 	public void update()
 	{
-		RockPaperScissors.State state = rockPaperScissors.getState();
 		movesPanel.setVisible(rockPaperScissors.isLocalPlayerMove());
-		//TODO show player move?
-		switch (state)
-		{
-			case PLAYER1_WIN:
-				status.setText("P1 win");
-				break;
-			case PLAYER2_WIN:
-				status.setText("P2 win");
-				break;
-			case WAITING_PLAYER_MOVE:
-				status.setText("Waiting player move");
-		}
+		status.setText(rockPaperScissors.getStatusText());
 		container.revalidate();
 	}
 
@@ -116,20 +110,22 @@ public class RockPaperScissorGamePanel extends JPanel
 	private JPanel createMovesPanel(RockPaperScissors rockPaperScissors)
 	{
 		JPanel movesPanel = new JPanel();
+		movesPanel.setLayout(new BorderLayout(2, 0));
+		movesPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
 		movesPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		movesPanel.setLayout(new DynamicGridLayout(1, 3));
+		movesPanel.setPreferredSize(new Dimension(100, 30));
 
 		rockButton.setText("Rock");
 		rockButton.setFocusable(false);
-		movesPanel.add(rockButton);
+		movesPanel.add(rockButton, BorderLayout.WEST);
 
 		paperButton.setText("Paper");
 		paperButton.setFocusable(false);
-		movesPanel.add(paperButton);
+		movesPanel.add(paperButton, BorderLayout.CENTER);
 
 		scissorsButton.setText("Scissors");
 		scissorsButton.setFocusable(false);
-		movesPanel.add(scissorsButton);
+		movesPanel.add(scissorsButton, BorderLayout.EAST);
 
 		rockButton.addActionListener(e -> rockPaperScissors.move(RockPaperScissors.Move.ROCK));
 		paperButton.addActionListener(e -> rockPaperScissors.move(RockPaperScissors.Move.PAPER));

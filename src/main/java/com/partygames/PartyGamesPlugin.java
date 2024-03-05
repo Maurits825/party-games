@@ -143,11 +143,6 @@ public class PartyGamesPlugin extends Plugin
 		partyService.send(new AcceptChallengeEvent(challenge.getChallengeEvent().getChallengeId()));
 	}
 
-	public void playMove(String move)
-	{
-		log.debug("play move: " + move);
-	}
-
 	@Subscribe
 	public void onChallengeEvent(ChallengeEvent event)
 	{

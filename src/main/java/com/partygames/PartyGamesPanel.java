@@ -13,7 +13,7 @@ import net.runelite.client.ui.components.materialtabs.MaterialTabGroup;
 
 public class PartyGamesPanel extends PluginPanel
 {
-	// this panel will hold either the ge search panel or the ge offers panel
+	// this panel will hold the lobby panel or a game panel
 	private final JPanel display = new JPanel();
 
 	private final MaterialTabGroup tabGroup = new MaterialTabGroup(display);
