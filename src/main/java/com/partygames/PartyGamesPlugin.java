@@ -124,10 +124,9 @@ public class PartyGamesPlugin extends Plugin
 		this.updatePartyMembers();
 	}
 
-	public void challengeMember(PartyMember member)
+	public void challengeMember(PartyMember member, GameType gameType)
 	{
 		log.debug("send challenge event");
-		GameType gameType = GameType.ROCK_PAPER_SCISSORS; //default rps for now
 		partyService.send(new ChallengeEvent(partyService.getLocalMember().getMemberId(), member.getMemberId(), gameType));
 	}
 
@@ -194,7 +193,7 @@ public class PartyGamesPlugin extends Plugin
 	private void updatePartyMembers()
 	{
 		partyMembers = partyService.getMembers();//TODO when joining party dont have the name data yet here
-		SwingUtilities.invokeLater(() -> panel.getPartyGamesLobbyPanel().updateParty(partyMembers));
+		SwingUtilities.invokeLater(() -> panel.getPartyGamesLobbyPanel().updatePartyMembers(partyMembers));
 	}
 
 	@Provides
