@@ -6,8 +6,6 @@ import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.util.ArrayList;
-import java.util.List;
 import javax.inject.Inject;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -27,8 +25,6 @@ public class RockPaperScissorsPanel extends JPanel
 	private final JPanel centerPanel = new JPanel(cardLayout);
 
 	private final PluginErrorPanel errorPanel = new PluginErrorPanel();
-
-	private final List<RockPaperScissorGamePanel> rockPaperScissorGamePanelList = new ArrayList<>();
 
 	@Inject
 	private RockPaperScissorsPanel(PartyGamesPlugin plugin)
@@ -80,10 +76,8 @@ public class RockPaperScissorsPanel extends JPanel
 	public RockPaperScissorGamePanel addRPSGame(RockPaperScissors rpsGame)
 	{
 		RockPaperScissorGamePanel gamePanel = new RockPaperScissorGamePanel(rpsGame);
-//		rockPaperScissorGamePanelList.add(gamePanel); //TODO test, if needed ->
 		rpsPanel.add(gamePanel, constraints);
 		constraints.gridy++;
-		rpsPanel.revalidate(); //TODO needed?
 
 		cardLayout.show(centerPanel, RPS_PANEL);
 

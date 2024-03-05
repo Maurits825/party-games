@@ -1,10 +1,10 @@
 package com.partygames.RockPaperScissors;
 
 import com.partygames.data.Challenge;
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -80,7 +80,6 @@ public class RockPaperScissorGamePanel extends JPanel
 
 		final JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
 		footerPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		footerPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
 		status.setText(rockPaperScissors.getStatusText());
 		footerPanel.add(status);
 
@@ -92,7 +91,6 @@ public class RockPaperScissorGamePanel extends JPanel
 	{
 		movesPanel.setVisible(rockPaperScissors.isLocalPlayerMove());
 		status.setText(rockPaperScissors.getStatusText());
-		container.revalidate();
 	}
 
 	private void SetAvatarStyle(JLabel avatar, PartyMember member)
@@ -109,23 +107,22 @@ public class RockPaperScissorGamePanel extends JPanel
 
 	private JPanel createMovesPanel(RockPaperScissors rockPaperScissors)
 	{
-		JPanel movesPanel = new JPanel();
-		movesPanel.setLayout(new BorderLayout(2, 0));
+		JPanel movesPanel = new JPanel(new GridLayout(1, 3));
 		movesPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
 		movesPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		movesPanel.setPreferredSize(new Dimension(100, 30));
+		movesPanel.setPreferredSize(new Dimension(0, 30));
 
 		rockButton.setText("Rock");
 		rockButton.setFocusable(false);
-		movesPanel.add(rockButton, BorderLayout.WEST);
+		movesPanel.add(rockButton);
 
 		paperButton.setText("Paper");
 		paperButton.setFocusable(false);
-		movesPanel.add(paperButton, BorderLayout.CENTER);
+		movesPanel.add(paperButton);
 
 		scissorsButton.setText("Scissors");
 		scissorsButton.setFocusable(false);
-		movesPanel.add(scissorsButton, BorderLayout.EAST);
+		movesPanel.add(scissorsButton);
 
 		rockButton.addActionListener(e -> rockPaperScissors.move(RockPaperScissors.Move.ROCK));
 		paperButton.addActionListener(e -> rockPaperScissors.move(RockPaperScissors.Move.PAPER));
