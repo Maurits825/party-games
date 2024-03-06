@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
-import javax.swing.SwingUtilities;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
@@ -192,8 +191,9 @@ public class PartyGamesPlugin extends Plugin
 
 	private void updatePartyMembers()
 	{
+		log.debug("updatePartyMembers");
 		partyMembers = partyService.getMembers();//TODO when joining party dont have the name data yet here
-		SwingUtilities.invokeLater(() -> panel.getPartyGamesLobbyPanel().updatePartyMembers(partyMembers));
+		panel.getPartyGamesLobbyPanel().updateAll(); //TODO just redraw everything for now
 	}
 
 	@Provides

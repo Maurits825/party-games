@@ -7,6 +7,7 @@ import com.partygames.data.events.ChallengeEvent;
 import com.partygames.ui.ChallengeBanner;
 import com.partygames.ui.PartyMemberBanner;
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -23,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.components.DragAndDropReorderPane;
+import net.runelite.client.ui.components.PluginErrorPanel;
 
 @Slf4j
 public class PartyGamesLobbyPanel extends JPanel
@@ -30,6 +32,12 @@ public class PartyGamesLobbyPanel extends JPanel
 	private final PartyGamesPlugin plugin;
 	private final JButton testButton1 = new JButton();
 	private final JButton testButton2 = new JButton();
+
+	private static final String ERROR_PANEL = "ERROR_PANEL";
+	private static final String LOBBY_PANEL = "LOBBY_PANEL";
+	private final CardLayout cardLayout = new CardLayout();
+	private final JPanel container = new JPanel(cardLayout);
+	private final PluginErrorPanel noPartyPanel = new PluginErrorPanel();
 
 	private final JComponent partyMembersPanel = new DragAndDropReorderPane();
 	private final JComponent challengesPanel = new DragAndDropReorderPane();
@@ -50,7 +58,6 @@ public class PartyGamesLobbyPanel extends JPanel
 		BoxLayout boxLayout = new BoxLayout(layoutPanel, BoxLayout.Y_AXIS);
 		layoutPanel.setLayout(boxLayout);
 		layoutPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		add(layoutPanel, BorderLayout.NORTH);
 
 		final JPanel topPanel = new JPanel();
 		topPanel.setBorder(new EmptyBorder(0, 0, 4, 0));
@@ -90,9 +97,23 @@ public class PartyGamesLobbyPanel extends JPanel
 		testButton2.addActionListener(e ->
 		{
 			log.info("refresh view");
-			updatePartyMembers(plugin.getPartyMembers());
-			updateChallenges(plugin.getActiveChallenges());
+			updateAll();
 		});
+
+		JPanel errorWrapper = new JPanel(new BorderLayout());
+		errorWrapper.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		errorWrapper.add(noPartyPanel, BorderLayout.NORTH);
+
+		noPartyPanel.setContent("Not in a party", "Use the Party plugin to join a party.");
+
+		container.add(layoutPanel, LOBBY_PANEL);
+		container.add(errorWrapper, ERROR_PANEL);
+
+		cardLayout.show(container, ERROR_PANEL);
+
+		add(container, BorderLayout.NORTH);
+
+		updateAll();
 	}
 
 	public void updatePartyMembers(List<PartyMember> partyMembers)
@@ -124,6 +145,21 @@ public class PartyGamesLobbyPanel extends JPanel
 		}
 
 		challengesPanel.revalidate();
+	}
+
+	public void updateAll()
+	{
+		if (plugin.getPartyService().isInParty())
+		{
+			cardLayout.show(container, LOBBY_PANEL);
+		}
+		else
+		{
+			cardLayout.show(container, ERROR_PANEL);
+		}
+
+		updatePartyMembers(plugin.getPartyMembers());
+		updateChallenges(plugin.getActiveChallenges());
 	}
 
 	private JPanel getHeaderTextPanel(String text)
