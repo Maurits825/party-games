@@ -40,7 +40,7 @@ public class PartyGamesLobbyPanel extends JPanel
 	private final PluginErrorPanel noPartyPanel = new PluginErrorPanel();
 
 	private final JComponent partyMembersPanel = new DragAndDropReorderPane();
-	private final JComponent challengesPanel = new DragAndDropReorderPane();
+	private final JPanel challengesPanel = new JPanel();
 
 	private final List<PartyMemberBanner> partyMemberBanners = new ArrayList<>();
 	private final List<ChallengeBanner> challengeBanners = new ArrayList<>();
@@ -86,6 +86,8 @@ public class PartyGamesLobbyPanel extends JPanel
 		layoutPanel.add(partyMembersPanel);
 
 		layoutPanel.add(getHeaderTextPanel("Challenges"));
+
+		challengesPanel.setLayout(new BoxLayout(challengesPanel, BoxLayout.Y_AXIS));
 		layoutPanel.add(challengesPanel);
 
 		testButton1.addActionListener(e ->
@@ -113,7 +115,7 @@ public class PartyGamesLobbyPanel extends JPanel
 
 		add(container, BorderLayout.NORTH);
 
-		updateAll();
+		updateAll(); //TODO we need init and update difference
 	}
 
 	public void updateChallengeState()
@@ -142,6 +144,13 @@ public class PartyGamesLobbyPanel extends JPanel
 			PartyMemberBanner memberBanner = new PartyMemberBanner(plugin.getPartyService(), member, plugin);
 			partyMemberBanners.add(memberBanner);
 			partyMembersPanel.add(memberBanner);
+		}
+
+		if (partyMembers.size() == 1)
+		{
+			JPanel emptyParty = new JPanel(new BorderLayout());
+			emptyParty.add(new JLabel("No other members"), BorderLayout.WEST);
+			partyMembersPanel.add(emptyParty);
 		}
 
 		partyMembersPanel.revalidate();
@@ -174,14 +183,13 @@ public class PartyGamesLobbyPanel extends JPanel
 		if (plugin.getPartyService().isInParty())
 		{
 			cardLayout.show(container, LOBBY_PANEL);
+			updatePartyMembers(plugin.getPartyMembers());
+			updatePendingChallenges(plugin.getPendingChallenges());
 		}
 		else
 		{
 			cardLayout.show(container, ERROR_PANEL);
 		}
-
-		updatePartyMembers(plugin.getPartyMembers());
-		updatePendingChallenges(plugin.getPendingChallenges());
 	}
 
 	private JPanel getHeaderTextPanel(String text)

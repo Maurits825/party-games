@@ -26,8 +26,6 @@ public class PartyGamesPanel extends PluginPanel
 	@Inject
 	private PartyGamesPanel(PartyGamesLobbyPanel partyGamesLobbyPanel, RockPaperScissorsPanel rockPaperScissorsPanel)
 	{
-		super(false);
-
 		this.partyGamesLobbyPanel = partyGamesLobbyPanel;
 		this.rockPaperScissorsPanel = rockPaperScissorsPanel;
 

@@ -213,7 +213,7 @@ public class PartyGamesPlugin extends Plugin
 		{
 			case ROCK_PAPER_SCISSORS:
 			default:
-				return new RockPaperScissors(wsClient, eventBus, partyService, panel.getRockPaperScissorsPanel());
+				return new RockPaperScissors(wsClient, eventBus, partyService, panel.getRockPaperScissorsPanel(), client);
 		}
 	}
 

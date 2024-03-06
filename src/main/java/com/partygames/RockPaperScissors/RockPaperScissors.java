@@ -3,17 +3,21 @@ package com.partygames.RockPaperScissors;
 import com.partygames.RockPaperScissors.events.MoveEvent;
 import com.partygames.data.Challenge;
 import com.partygames.data.Game;
+import java.awt.Color;
+import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import lombok.Data;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Client;
+import net.runelite.api.Player;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.party.PartyService;
 import net.runelite.client.party.WSClient;
+import net.runelite.client.util.ColorUtil;
 
 @Slf4j
 public class RockPaperScissors implements Game
@@ -48,18 +52,29 @@ public class RockPaperScissors implements Game
 	);
 
 	private final String MOVE_CENSOR = "???";
+	private final String WIN_TEXT = "Sit rat";
+	private final String LOSE_TEXT = " is my King";
+	private final String DRAW_TEXT = "Run it back";
+	private final int OVERHEAD_TEXT_DURATION = 250;
 
 	@Data
-	@RequiredArgsConstructor
-	private class Player
+	private class RpsPlayer
 	{
 		public Move move = null;
 		public final boolean isLocalPlayer;
 		public final PartyMember member;
+		public final Player player;
+
+		public RpsPlayer(PartyMember member, long localPlayerId)
+		{
+			this.member = member;
+			isLocalPlayer = member.getMemberId() == localPlayerId;
+			player = findPlayer(member.getDisplayName());
+		}
 	}
 
-	private Player player1;
-	private Player player2;
+	private RpsPlayer player1;
+	private RpsPlayer player2;
 
 	@Getter
 	private State state = State.WAITING_PLAYER_MOVE;
@@ -69,6 +84,7 @@ public class RockPaperScissors implements Game
 	private final EventBus eventBus;
 	private final PartyService partyService;
 	private final RockPaperScissorsPanel panel;
+	private final Client client;
 
 	private final long localPlayerId;
 
@@ -76,12 +92,13 @@ public class RockPaperScissors implements Game
 	private boolean isLocalPlayerMove;
 
 	@Inject
-	public RockPaperScissors(WSClient wsClient, EventBus eventBus, PartyService partyService, RockPaperScissorsPanel panel)
+	public RockPaperScissors(WSClient wsClient, EventBus eventBus, PartyService partyService, RockPaperScissorsPanel panel, Client client)
 	{
 		this.wsClient = wsClient;
 		this.eventBus = eventBus;
 		this.partyService = partyService;
 		this.panel = panel;
+		this.client = client;
 
 		eventBus.register(this);
 		wsClient.registerMessage(MoveEvent.class);
@@ -102,8 +119,8 @@ public class RockPaperScissors implements Game
 		isLocalPlayerMove = true;
 		state = State.WAITING_PLAYER_MOVE;
 
-		player1 = new Player(challenge.getChallenger().getMemberId() == localPlayerId, challenge.getChallenger());
-		player2 = new Player(challenge.getChallengee().getMemberId() == localPlayerId, challenge.getChallengee());
+		player1 = new RpsPlayer(challenge.getChallenger(), localPlayerId);
+		player2 = new RpsPlayer(challenge.getChallengee(), localPlayerId);
 
 		panel.initialize(this);
 	}
@@ -125,7 +142,7 @@ public class RockPaperScissors implements Game
 		}
 
 		long moveMemberId = event.getMemberId();
-		Player playerUpdate = player1.member.getMemberId() == moveMemberId ? player1 : player2;
+		RpsPlayer playerUpdate = player1.member.getMemberId() == moveMemberId ? player1 : player2;
 		playerUpdate.move = event.getMove();
 		isLocalPlayerMove = isLocalPlayerMove && !playerUpdate.isLocalPlayer;
 
@@ -169,12 +186,12 @@ public class RockPaperScissors implements Game
 		return status;
 	}
 
-	private String getPlayerMove(Player player)
+	private String getPlayerMove(RpsPlayer player)
 	{
 		String move = MOVE_CENSOR;
 		if (state != State.WAITING_PLAYER_MOVE || (player.isLocalPlayer && player.move != null))
 		{
-			move = player.move.name();
+			move = player.move.getText();
 		}
 		return move;
 	}
@@ -186,16 +203,46 @@ public class RockPaperScissors implements Game
 
 		if (p1Move == p2Move)
 		{
+			setOverHeadText(player1.getPlayer(), DRAW_TEXT, Color.YELLOW, OVERHEAD_TEXT_DURATION);
+			setOverHeadText(player2.getPlayer(), DRAW_TEXT, Color.YELLOW, OVERHEAD_TEXT_DURATION);
 			return State.DRAW;
 		}
 
 		if (winRules.get(p1Move) == p2Move)
 		{
+			setOverHeadText(player1.getPlayer(), WIN_TEXT, Color.GREEN, OVERHEAD_TEXT_DURATION);
+			setOverHeadText(player2.getPlayer(), player1.getMember().getDisplayName() + LOSE_TEXT, Color.RED, OVERHEAD_TEXT_DURATION);
 			return State.PLAYER1_WIN;
 		}
 		else
 		{
+			setOverHeadText(player2.getPlayer(), WIN_TEXT, Color.GREEN, OVERHEAD_TEXT_DURATION);
+			setOverHeadText(player1.getPlayer(), player2.getMember().getDisplayName() + LOSE_TEXT, Color.RED, OVERHEAD_TEXT_DURATION);
 			return State.PLAYER2_WIN;
 		}
+	}
+
+	private void setOverHeadText(Player player, String text, Color color, int duration)
+	{
+		if (player == null)
+		{
+			return;
+		}
+
+		player.setOverheadCycle(duration);
+		player.setOverheadText(ColorUtil.wrapWithColorTag(text, color));
+	}
+
+	private Player findPlayer(String name)
+	{
+		List<Player> players = client.getPlayers();
+		for (Player player : players)
+		{
+			if (name.equals(player.getName()))
+			{
+				return player;
+			}
+		}
+		return null;
 	}
 }
