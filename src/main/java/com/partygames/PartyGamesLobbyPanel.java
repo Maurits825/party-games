@@ -242,8 +242,9 @@ public class PartyGamesLobbyPanel extends JPanel
 	private void addActiveGame()
 	{
 		long localId = plugin.getPartyService().getLocalMember().getMemberId();
-		long otherId = plugin.getPartyMembers().size() == 0 ? localId : plugin.getPartyMembers().get(0).getMemberId();
-		ChallengeEvent challengeEvent = new ChallengeEvent(localId, otherId, GameType.ROCK_PAPER_SCISSORS);
+		long otherId = plugin.getPartyService().getMembers().size() == 0 ? localId : plugin.getPartyService().getMembers().get(0).getMemberId();
+//		ChallengeEvent challengeEvent = new ChallengeEvent(localId, otherId, GameType.ROCK_PAPER_SCISSORS);
+		ChallengeEvent challengeEvent = new ChallengeEvent(otherId, localId, GameType.COIN_FLIP);
 		plugin.onChallengeEvent(challengeEvent);
 
 		AcceptChallengeEvent acceptChallengeEvent = new AcceptChallengeEvent(challengeEvent.getChallengeId());

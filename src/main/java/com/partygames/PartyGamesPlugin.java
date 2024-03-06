@@ -71,8 +71,6 @@ public class PartyGamesPlugin extends Plugin
 	private NavigationButton navButton;
 
 	@Getter
-	private List<PartyMember> partyMembers = new ArrayList<>();
-	@Getter
 	private List<Challenge> pendingChallenges = new ArrayList<>();
 
 	@Getter

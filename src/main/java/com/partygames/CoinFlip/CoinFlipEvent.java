@@ -7,9 +7,10 @@ import net.runelite.client.party.messages.PartyMemberMessage;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class MoveEvent extends PartyMemberMessage
+public class CoinFlipEvent extends PartyMemberMessage
 {
 	long memberId;
 	UUID challengeId;
-	CoinFlip.CoinSide coinSide;
+	CoinFlip.CoinSide picked;
+	CoinFlip.CoinSide flipped;
 }
