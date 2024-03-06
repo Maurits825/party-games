@@ -116,6 +116,15 @@ public class PartyGamesLobbyPanel extends JPanel
 		updateAll();
 	}
 
+	public void updateChallengeState()
+	{
+		for (PartyMemberBanner banner : partyMemberBanners)
+		{
+			banner.update();
+		}
+	}
+
+	//todo remove or fix this later
 	public void updatePartyMembers(List<PartyMember> partyMembers)
 	{
 		partyMembersPanel.removeAll();
@@ -132,7 +141,7 @@ public class PartyGamesLobbyPanel extends JPanel
 		partyMembersPanel.revalidate();
 	}
 
-	public void updateChallenges(List<Challenge> challenges)
+	public void updatePendingChallenges(List<Challenge> challenges)
 	{
 		challengesPanel.removeAll();
 		challengeBanners.clear();
@@ -144,7 +153,7 @@ public class PartyGamesLobbyPanel extends JPanel
 			challengesPanel.add(challengeBanner);
 		}
 
-		challengesPanel.revalidate();
+		challengesPanel.revalidate(); //TODO needed??
 	}
 
 	public void updateAll()
@@ -159,7 +168,7 @@ public class PartyGamesLobbyPanel extends JPanel
 		}
 
 		updatePartyMembers(plugin.getPartyMembers());
-		updateChallenges(plugin.getActiveChallenges());
+		updatePendingChallenges(plugin.getPendingChallenges());
 	}
 
 	private JPanel getHeaderTextPanel(String text)

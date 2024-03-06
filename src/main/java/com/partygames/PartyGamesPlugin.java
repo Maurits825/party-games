@@ -65,10 +65,10 @@ public class PartyGamesPlugin extends Plugin
 	private NavigationButton navButton;
 
 	@Getter
-	private List<PartyMember> partyMembers;
-
+	private List<PartyMember> partyMembers = new ArrayList<>();
 	@Getter
-	private List<Challenge> activeChallenges;
+	private List<Challenge> pendingChallenges = new ArrayList<>();
+
 	@Getter
 	private final Map<GameType, Game> activeGames = new HashMap<>();
 
@@ -77,7 +77,7 @@ public class PartyGamesPlugin extends Plugin
 	{
 		panel = injector.getInstance(PartyGamesPanel.class);
 
-		activeChallenges = new ArrayList<>();
+		pendingChallenges = new ArrayList<>();
 		activeGames.clear();
 
 		navButton = NavigationButton.builder()
@@ -125,23 +125,25 @@ public class PartyGamesPlugin extends Plugin
 
 	public void challengeMember(PartyMember member, GameType gameType)
 	{
-		log.debug("send challenge event");
 		partyService.send(new ChallengeEvent(partyService.getLocalMember().getMemberId(), member.getMemberId(), gameType));
 	}
 
 	public void acceptChallenge(Challenge challenge)
 	{
-		log.debug("accept challenge");
 		partyService.send(new AcceptChallengeEvent(challenge.getChallengeEvent().getChallengeId()));
 	}
 
 	@Subscribe
 	public void onChallengeEvent(ChallengeEvent event)
 	{
-		log.debug("on challenge event");
-		Challenge challenge = new Challenge(partyService.getMemberById(event.getFromId()), partyService.getMemberById(event.getToId()), event);
-		activeChallenges.add(challenge);
-		panel.getPartyGamesLobbyPanel().updateChallenges(activeChallenges);
+		long localPlayerId = partyService.getLocalMember().getMemberId();
+		if (event.getFromId() == localPlayerId || event.getToId() == localPlayerId)
+		{
+			Challenge challenge = new Challenge(partyService.getMemberById(event.getFromId()), partyService.getMemberById(event.getToId()), event);
+			pendingChallenges.add(challenge);
+			panel.getPartyGamesLobbyPanel().updateChallengeState();
+			panel.getPartyGamesLobbyPanel().updatePendingChallenges(pendingChallenges);
+		}
 	}
 
 	@Subscribe
@@ -149,7 +151,7 @@ public class PartyGamesPlugin extends Plugin
 	{
 		log.debug("on accept challenge event");
 		Challenge challenge = null;
-		for (Challenge c : activeChallenges)
+		for (Challenge c : pendingChallenges)
 		{
 			if (c.getChallengeEvent().getChallengeId().equals(acceptChallengeEvent.getChallengeId()))
 			{
@@ -165,8 +167,8 @@ public class PartyGamesPlugin extends Plugin
 
 		long localMemberId = partyService.getLocalMember().getMemberId();
 		ChallengeEvent challengeEvent = challenge.getChallengeEvent();
-		activeChallenges.remove(challenge);
-		panel.getPartyGamesLobbyPanel().updateChallenges(activeChallenges);
+		pendingChallenges.remove(challenge);
+		panel.getPartyGamesLobbyPanel().updatePendingChallenges(pendingChallenges);
 
 		if (localMemberId == challengeEvent.getFromId() || localMemberId == challengeEvent.getToId())
 		{
@@ -177,6 +179,22 @@ public class PartyGamesPlugin extends Plugin
 			}
 			activeGames.get(gameType).initialize(challenge);
 		}
+	}
+
+	public boolean pendingChallengeExists(PartyMember member, GameType gameType)
+	{
+		long localPlayerId = partyService.getLocalMember().getMemberId();
+		for (Challenge challenge : pendingChallenges)
+		{
+			if (gameType == challenge.getChallengeEvent().getGameType() && (
+				localPlayerId == challenge.getChallenger().getMemberId() ||
+					localPlayerId == challenge.getChallengee().getMemberId()
+			))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private Game getGame(GameType gameType)
@@ -193,7 +211,11 @@ public class PartyGamesPlugin extends Plugin
 	{
 		log.debug("updatePartyMembers");
 		partyMembers = partyService.getMembers();//TODO when joining party dont have the name data yet here
-		panel.getPartyGamesLobbyPanel().updateAll(); //TODO just redraw everything for now
+		//TODO if left party have to set the error panel
+		if (partyService.isInParty())
+		{
+			panel.getPartyGamesLobbyPanel().updateAll(); //TODO just redraw everything for now
+		}
 	}
 
 	@Provides
