@@ -17,7 +17,6 @@ import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import net.runelite.client.party.PartyMember;
-import net.runelite.client.party.PartyService;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.components.TitleCaseListCellRenderer;
@@ -30,16 +29,14 @@ public class PartyMemberBanner extends JPanel
 	private boolean avatarSet;
 
 	private final PartyMember member;
-	private final PartyService partyService;
 	private final PartyGamesPlugin plugin;
 
 	final JComboBox<GameType> gameTypeBox = new JComboBox<>(GameType.values());
 	final JButton challengeButton = new JButton();
 
-	public PartyMemberBanner(PartyService partyService, PartyMember member, PartyGamesPlugin plugin)
+	public PartyMemberBanner(PartyMember member, PartyGamesPlugin plugin)
 	{
 		this.member = member;
-		this.partyService = partyService;
 		this.plugin = plugin;
 
 		setLayout(new BorderLayout());
@@ -111,7 +108,6 @@ public class PartyMemberBanner extends JPanel
 
 	public void update()
 	{
-		//TODO try with party service to see diference in loading data??
 		if (!avatarSet && member.getAvatar() != null)
 		{
 			ImageIcon icon = new ImageIcon(ImageUtil.resizeImage(member.getAvatar(), 32, 32));

@@ -125,7 +125,6 @@ public class RockPaperScissorsPanel extends JPanel
 		JPanel movesPanel = new JPanel(new GridLayout(1, 3));
 		movesPanel.setBorder(new EmptyBorder(5, 0, 0, 0));
 		movesPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-//		movesPanel.setPreferredSize(new Dimension(0, 30));
 
 		for (RockPaperScissors.Move move : RockPaperScissors.Move.values())
 		{

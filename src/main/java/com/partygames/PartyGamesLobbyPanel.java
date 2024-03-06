@@ -11,8 +11,9 @@ import java.awt.CardLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import javax.inject.Inject;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -42,8 +43,11 @@ public class PartyGamesLobbyPanel extends JPanel
 	private final JComponent partyMembersPanel = new DragAndDropReorderPane();
 	private final JPanel challengesPanel = new JPanel();
 
-	private final List<PartyMemberBanner> partyMemberBanners = new ArrayList<>();
-	private final List<ChallengeBanner> challengeBanners = new ArrayList<>();
+	private final JPanel emptyPartyPanel = new JPanel(new BorderLayout());
+	private final JPanel emptyPendingChallengesPanel = new JPanel(new BorderLayout());
+
+	private final Map<Long, PartyMemberBanner> partyMemberBanners = new HashMap<>();
+	private final Map<UUID, ChallengeBanner> challengeBanners = new HashMap<>();
 
 	@Inject
 	private PartyGamesLobbyPanel(PartyGamesPlugin plugin)
@@ -99,7 +103,8 @@ public class PartyGamesLobbyPanel extends JPanel
 		testButton2.addActionListener(e ->
 		{
 			log.info("refresh view");
-			updateAll();
+			updateAllPartyMemberBanner();
+			updateParty();
 		});
 
 		JPanel errorWrapper = new JPanel(new BorderLayout());
@@ -108,6 +113,9 @@ public class PartyGamesLobbyPanel extends JPanel
 
 		noPartyPanel.setContent("Not in a party", "Use the Party plugin to join a party.");
 
+		emptyPartyPanel.add(new JLabel("No other members"), BorderLayout.WEST);
+		emptyPendingChallengesPanel.add(new JLabel("No pending challenges"), BorderLayout.WEST);
+
 		container.add(layoutPanel, LOBBY_PANEL);
 		container.add(errorWrapper, ERROR_PANEL);
 
@@ -115,81 +123,107 @@ public class PartyGamesLobbyPanel extends JPanel
 
 		add(container, BorderLayout.NORTH);
 
-		updateAll(); //TODO we need init and update difference
+		updateParty();
 	}
 
-	public void updateChallengeState()
+	public void updateAllPartyMemberBanner()
 	{
-		for (PartyMemberBanner banner : partyMemberBanners)
+		for (PartyMemberBanner banner : partyMemberBanners.values())
 		{
 			banner.update();
 		}
 	}
 
-	//todo remove or fix this later
-	public void updatePartyMembers(List<PartyMember> partyMembers)
+	public void updatePartyMemberBanner(long memberId)
 	{
-		partyMembersPanel.removeAll();
+		if (partyMemberBanners.containsKey(memberId))
+		{
+			partyMemberBanners.get(memberId).update();
+		}
+	}
+
+	public void addPartyMember(PartyMember member)
+	{
+		if (!partyMemberBanners.containsKey(member.getMemberId()))
+		{
+			PartyMemberBanner memberBanner = new PartyMemberBanner(member, plugin);
+			partyMemberBanners.put(member.getMemberId(), memberBanner);
+			partyMembersPanel.add(memberBanner);
+			partyMembersPanel.revalidate();
+		}
+
+		updateParty();
+	}
+
+	public void removePartyMember(long memberId)
+	{
+		PartyMemberBanner banner = partyMemberBanners.remove(memberId);
+
+		if (banner != null)
+		{
+			partyMembersPanel.remove(banner);
+			partyMembersPanel.revalidate();
+		}
+
+		updateParty();
+	}
+
+	public void removeAllPartyMembers()
+	{
+		partyMemberBanners.forEach((key, value) -> partyMembersPanel.remove(value));
+		partyMembersPanel.revalidate();
 		partyMemberBanners.clear();
 
-		//TODO maybe have this in plugin with getter
-		long localPlayerId = plugin.getPartyService().getLocalMember().getMemberId();
-		for (PartyMember member : partyMembers)
-		{
-			if (localPlayerId == member.getMemberId())
-			{
-				continue;
-			}
-
-			PartyMemberBanner memberBanner = new PartyMemberBanner(plugin.getPartyService(), member, plugin);
-			partyMemberBanners.add(memberBanner);
-			partyMembersPanel.add(memberBanner);
-		}
-
-		if (partyMembers.size() == 1)
-		{
-			JPanel emptyParty = new JPanel(new BorderLayout());
-			emptyParty.add(new JLabel("No other members"), BorderLayout.WEST);
-			partyMembersPanel.add(emptyParty);
-		}
-
-		partyMembersPanel.revalidate();
+		updateParty();
 	}
 
-	public void updatePendingChallenges(List<Challenge> challenges)
+	public void updateParty()
 	{
-		challengesPanel.removeAll();
-		challengeBanners.clear();
+		partyMembersPanel.remove(emptyPartyPanel);
+		challengesPanel.remove(emptyPendingChallengesPanel);
 
-		for (Challenge challenge : challenges)
-		{
-			ChallengeBanner challengeBanner = new ChallengeBanner(challenge, plugin);
-			challengeBanners.add(challengeBanner);
-			challengesPanel.add(challengeBanner);
-		}
-
-		if (challenges.size() == 0)
-		{
-			JPanel emptyChallenges = new JPanel(new BorderLayout());
-			emptyChallenges.add(new JLabel("No pending challenges"), BorderLayout.WEST);
-			challengesPanel.add(emptyChallenges);
-		}
-
-		challengesPanel.revalidate();
-	}
-
-	public void updateAll()
-	{
 		if (plugin.getPartyService().isInParty())
 		{
 			cardLayout.show(container, LOBBY_PANEL);
-			updatePartyMembers(plugin.getPartyMembers());
-			updatePendingChallenges(plugin.getPendingChallenges());
+			if (partyMemberBanners.size() == 0)
+			{
+				partyMembersPanel.add(emptyPartyPanel);
+			}
+			if (challengeBanners.size() == 0)
+			{
+				challengesPanel.add(emptyPendingChallengesPanel);
+			}
 		}
 		else
 		{
 			cardLayout.show(container, ERROR_PANEL);
 		}
+	}
+
+	public void addPendingChallenge(Challenge challenge)
+	{
+		if (!challengeBanners.containsKey(challenge.getChallengeEvent().getChallengeId()))
+		{
+			ChallengeBanner challengeBanner = new ChallengeBanner(challenge, plugin);
+			challengeBanners.put(challenge.getChallengeEvent().getChallengeId(), challengeBanner);
+			challengesPanel.add(challengeBanner);
+			challengesPanel.revalidate();
+		}
+
+		updateParty();
+	}
+
+	public void removePendingChallenge(Challenge challenge)
+	{
+		ChallengeBanner challengeBanner = challengeBanners.remove(challenge.getChallengeEvent().getChallengeId());
+
+		if (challengeBanner != null)
+		{
+			challengesPanel.remove(challengeBanner);
+			challengesPanel.revalidate();
+		}
+
+		updateParty();
 	}
 
 	private JPanel getHeaderTextPanel(String text)

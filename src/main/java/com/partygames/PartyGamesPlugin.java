@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import javax.swing.SwingUtilities;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
@@ -21,9 +22,12 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.PartyChanged;
+import net.runelite.client.events.PartyMemberAvatar;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.party.PartyService;
 import net.runelite.client.party.WSClient;
+import net.runelite.client.party.events.UserJoin;
+import net.runelite.client.party.events.UserPart;
 import net.runelite.client.party.messages.UserSync;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -62,6 +66,7 @@ public class PartyGamesPlugin extends Plugin
 	private PartyGamesConfig config;
 
 	private PartyGamesPanel panel;
+	private PartyGamesLobbyPanel lobbyPanel;
 	private NavigationButton navButton;
 
 	@Getter
@@ -76,6 +81,7 @@ public class PartyGamesPlugin extends Plugin
 	protected void startUp() throws Exception
 	{
 		panel = injector.getInstance(PartyGamesPanel.class);
+		lobbyPanel = panel.getPartyGamesLobbyPanel();
 
 		pendingChallenges = new ArrayList<>();
 		activeGames.clear();
@@ -91,7 +97,13 @@ public class PartyGamesPlugin extends Plugin
 
 		if (partyService.isInParty())
 		{
-			updatePartyMembers();
+			for (PartyMember member : partyService.getMembers())
+			{
+				if (member.getMemberId() != getLocalPlayerId())
+				{
+					lobbyPanel.addPartyMember(member);
+				}
+			}
 		}
 
 		wsClient.registerMessage(ChallengeEvent.class);
@@ -112,15 +124,43 @@ public class PartyGamesPlugin extends Plugin
 	}
 
 	@Subscribe
+	public void onUserJoin(final UserJoin event)
+	{
+		if (isLocalPlayer(event.getMemberId()))
+		{
+			return;
+		}
+		log.debug("onUserJoin");
+		SwingUtilities.invokeLater(() -> lobbyPanel.addPartyMember(partyService.getMemberById(event.getMemberId())));
+	}
+
+	@Subscribe
+	public void onUserPart(final UserPart event)
+	{
+		if (isLocalPlayer(event.getMemberId()))
+		{
+			return;
+		}
+		SwingUtilities.invokeLater(() -> lobbyPanel.removePartyMember(event.getMemberId()));
+	}
+
+	@Subscribe
+	public void onPartyMemberAvatar(PartyMemberAvatar event)
+	{
+		SwingUtilities.invokeLater(() -> lobbyPanel.updatePartyMemberBanner(event.getMemberId()));
+	}
+
+	@Subscribe
 	public void onUserSync(final UserSync event)
 	{
-		this.updatePartyMembers();
+		log.debug("onUserSync"); //TODO do stuff?
 	}
 
 	@Subscribe
 	public void onPartyChanged(final PartyChanged event)
 	{
-		this.updatePartyMembers();
+		log.debug("onPartyChanged");
+		SwingUtilities.invokeLater(lobbyPanel::removeAllPartyMembers);
 	}
 
 	public void challengeMember(PartyMember member, GameType gameType)
@@ -136,13 +176,14 @@ public class PartyGamesPlugin extends Plugin
 	@Subscribe
 	public void onChallengeEvent(ChallengeEvent event)
 	{
-		long localPlayerId = partyService.getLocalMember().getMemberId();
+		long localPlayerId = getLocalPlayerId();
 		if (event.getFromId() == localPlayerId || event.getToId() == localPlayerId)
 		{
 			Challenge challenge = new Challenge(partyService.getMemberById(event.getFromId()), partyService.getMemberById(event.getToId()), event);
 			pendingChallenges.add(challenge);
-			panel.getPartyGamesLobbyPanel().updateChallengeState();
-			panel.getPartyGamesLobbyPanel().updatePendingChallenges(pendingChallenges);
+
+			lobbyPanel.updateAllPartyMemberBanner();
+			lobbyPanel.addPendingChallenge(challenge);
 		}
 	}
 
@@ -165,13 +206,12 @@ public class PartyGamesPlugin extends Plugin
 			return;
 		}
 
-		long localMemberId = partyService.getLocalMember().getMemberId();
+		long localMemberId = getLocalPlayerId();
 		ChallengeEvent challengeEvent = challenge.getChallengeEvent();
 		pendingChallenges.remove(challenge);
 
-		//TODO maybe variable for lobby panel
-		panel.getPartyGamesLobbyPanel().updateChallengeState();
-		panel.getPartyGamesLobbyPanel().updatePendingChallenges(pendingChallenges);
+		lobbyPanel.updateAllPartyMemberBanner();
+		lobbyPanel.removePendingChallenge(challenge);
 
 		if (localMemberId == challengeEvent.getFromId() || localMemberId == challengeEvent.getToId())
 		{
@@ -182,6 +222,20 @@ public class PartyGamesPlugin extends Plugin
 			}
 			activeGames.get(gameType).initialize(challenge);
 		}
+	}
+
+	public Long getLocalPlayerId()
+	{
+		if (partyService.isInParty())
+		{
+			return partyService.getLocalMember().getMemberId();
+		}
+		return null;
+	}
+
+	public boolean isLocalPlayer(long id)
+	{
+		return partyService.getLocalMember() != null && partyService.getLocalMember().getMemberId() == id;
 	}
 
 	public boolean pendingChallengeExists(PartyMember member, GameType gameType)
@@ -214,17 +268,6 @@ public class PartyGamesPlugin extends Plugin
 			case ROCK_PAPER_SCISSORS:
 			default:
 				return new RockPaperScissors(wsClient, eventBus, partyService, panel.getRockPaperScissorsPanel(), client);
-		}
-	}
-
-	private void updatePartyMembers()
-	{
-		log.debug("updatePartyMembers");
-		partyMembers = partyService.getMembers();//TODO when joining party dont have the name data yet here
-		//TODO if left party have to set the error panel
-		if (partyService.isInParty())
-		{
-			panel.getPartyGamesLobbyPanel().updateAll(); //TODO just redraw everything for now
 		}
 	}
 

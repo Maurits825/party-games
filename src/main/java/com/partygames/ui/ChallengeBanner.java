@@ -38,9 +38,14 @@ public class ChallengeBanner extends JPanel
 		avatar.setHorizontalAlignment(SwingConstants.CENTER);
 		avatar.setVerticalAlignment(SwingConstants.CENTER);
 		avatar.setPreferredSize(new Dimension(35, 35));
-		ImageIcon icon = new ImageIcon(ImageUtil.resizeImage(challenger.getAvatar(), 32, 32));
-		icon.getImage().flush();
-		avatar.setIcon(icon);
+
+		if (challenger.getAvatar() != null)
+		{
+			ImageIcon icon = new ImageIcon(ImageUtil.resizeImage(challenger.getAvatar(), 32, 32));
+			icon.getImage().flush();
+			avatar.setIcon(icon);
+		}
+
 		add(avatar, BorderLayout.WEST);
 
 		final JPanel namesPanel = new JPanel();
