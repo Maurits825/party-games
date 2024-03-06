@@ -1,6 +1,7 @@
 package com.partygames;
 
 import com.google.inject.Provides;
+import com.partygames.CoinFlip.CoinFlip;
 import com.partygames.RockPaperScissors.RockPaperScissors;
 import com.partygames.data.Challenge;
 import com.partygames.data.Game;
@@ -265,6 +266,8 @@ public class PartyGamesPlugin extends Plugin
 	{
 		switch (gameType)
 		{
+			case COIN_FLIP:
+				return new CoinFlip(wsClient, eventBus, partyService, panel.getCoinFlipPanel(), client);
 			case ROCK_PAPER_SCISSORS:
 			default:
 				return new RockPaperScissors(wsClient, eventBus, partyService, panel.getRockPaperScissorsPanel(), client);

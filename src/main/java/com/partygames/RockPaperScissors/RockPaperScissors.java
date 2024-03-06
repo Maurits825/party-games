@@ -6,7 +6,6 @@ import com.partygames.data.Game;
 import java.awt.Color;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -91,7 +90,6 @@ public class RockPaperScissors implements Game
 	@Getter
 	private boolean isLocalPlayerMove;
 
-	@Inject
 	public RockPaperScissors(WSClient wsClient, EventBus eventBus, PartyService partyService, RockPaperScissorsPanel panel, Client client)
 	{
 		this.wsClient = wsClient;

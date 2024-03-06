@@ -1,5 +1,6 @@
 package com.partygames;
 
+import com.partygames.CoinFlip.CoinFlipPanel;
 import com.partygames.RockPaperScissors.RockPaperScissorsPanel;
 import java.awt.BorderLayout;
 import javax.inject.Inject;
@@ -22,22 +23,27 @@ public class PartyGamesPanel extends PluginPanel
 	private final PartyGamesLobbyPanel partyGamesLobbyPanel;
 	@Getter
 	private final RockPaperScissorsPanel rockPaperScissorsPanel;
+	@Getter
+	private final CoinFlipPanel coinFlipPanel;
 
 	@Inject
-	private PartyGamesPanel(PartyGamesLobbyPanel partyGamesLobbyPanel, RockPaperScissorsPanel rockPaperScissorsPanel)
+	private PartyGamesPanel(PartyGamesLobbyPanel partyGamesLobbyPanel, RockPaperScissorsPanel rockPaperScissorsPanel, CoinFlipPanel coinFlipPanel)
 	{
 		this.partyGamesLobbyPanel = partyGamesLobbyPanel;
 		this.rockPaperScissorsPanel = rockPaperScissorsPanel;
+		this.coinFlipPanel = coinFlipPanel;
 
 		setLayout(new BorderLayout());
 		setBackground(ColorScheme.DARK_GRAY_COLOR);
 
 		MaterialTab lobbyTab = new MaterialTab("Lobby", tabGroup, partyGamesLobbyPanel);
 		MaterialTab RPSTab = new MaterialTab("RPS", tabGroup, rockPaperScissorsPanel);
+		MaterialTab coinFlipTab = new MaterialTab("Coin", tabGroup, coinFlipPanel);
 
 		tabGroup.setBorder(new EmptyBorder(5, 0, 0, 0));
 		tabGroup.addTab(lobbyTab);
 		tabGroup.addTab(RPSTab);
+		tabGroup.addTab(coinFlipTab);
 		tabGroup.select(lobbyTab); // selects the default selected tab
 
 		add(tabGroup, BorderLayout.NORTH);

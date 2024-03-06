@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum GameType
 {
 	ROCK_PAPER_SCISSORS("Rock Paper Scissors"),
-	HIGH_CARD("High Card");
+	COIN_FLIP("Coin Flip");
 
 	private final String text;
 
