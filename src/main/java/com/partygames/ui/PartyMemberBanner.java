@@ -16,7 +16,6 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
-import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.party.PartyService;
 import net.runelite.client.ui.ColorScheme;
@@ -24,7 +23,6 @@ import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.components.TitleCaseListCellRenderer;
 import net.runelite.client.util.ImageUtil;
 
-@Slf4j
 public class PartyMemberBanner extends JPanel
 {
 	private final JLabel name = new JLabel();
@@ -132,7 +130,6 @@ public class PartyMemberBanner extends JPanel
 
 	private void updateChallengePanel(GameType gameType)
 	{
-		log.debug("updateChallengePanel: " + gameType.toString());
 		if (plugin.pendingChallengeExists(member, gameType))
 		{
 			challengeButton.setText("Pending");

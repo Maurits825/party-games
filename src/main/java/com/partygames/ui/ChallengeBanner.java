@@ -20,7 +20,6 @@ import net.runelite.client.util.ImageUtil;
 
 public class ChallengeBanner extends JPanel
 {
-	private final JLabel name = new JLabel();
 	private final JLabel avatar = new JLabel();
 	private final JButton acceptButton = new JButton();
 	private final JLabel pendingLabel = new JLabel();
@@ -36,7 +35,6 @@ public class ChallengeBanner extends JPanel
 
 		Border border = BorderFactory.createLineBorder(Color.gray, 1);
 		avatar.setBorder(border);
-
 		avatar.setHorizontalAlignment(SwingConstants.CENTER);
 		avatar.setVerticalAlignment(SwingConstants.CENTER);
 		avatar.setPreferredSize(new Dimension(35, 35));
@@ -49,21 +47,28 @@ public class ChallengeBanner extends JPanel
 		namesPanel.setLayout(new DynamicGridLayout(2, 1));
 		namesPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		namesPanel.setBorder(new EmptyBorder(2, 5, 2, 5));
+		final JLabel name = new JLabel();
 		name.setText(challenger.getDisplayName() + " -> " + challengee.getDisplayName());
-		namesPanel.add(name, BorderLayout.CENTER);
-		add(namesPanel);
+		namesPanel.add(name, BorderLayout.NORTH);
 
+		final JLabel gameType = new JLabel();
+		gameType.setText(challenge.getChallengeEvent().getGameType().getText());
+		namesPanel.add(gameType, BorderLayout.SOUTH);
+
+		add(namesPanel, BorderLayout.CENTER);
+
+		//TODO wrap in panel for border stuff
 		boolean isLocalPlayer = plugin.getPartyService().getLocalMember().getMemberId() == challenger.getMemberId();
 		if (isLocalPlayer)
 		{
 			pendingLabel.setText("Pending");
-			add(pendingLabel, BorderLayout.EAST);
+			add(pendingLabel, BorderLayout.SOUTH);
 		}
 		else
 		{
 			acceptButton.setText("Accept");
 			acceptButton.setFocusable(false);
-			add(acceptButton, BorderLayout.EAST);
+			add(acceptButton, BorderLayout.SOUTH);
 		}
 
 		acceptButton.addActionListener(e -> plugin.acceptChallenge(challenge));

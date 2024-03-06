@@ -153,7 +153,14 @@ public class PartyGamesLobbyPanel extends JPanel
 			challengesPanel.add(challengeBanner);
 		}
 
-		challengesPanel.revalidate(); //TODO needed??
+		if (challenges.size() == 0)
+		{
+			JPanel emptyChallenges = new JPanel(new BorderLayout());
+			emptyChallenges.add(new JLabel("No pending challenges"), BorderLayout.WEST);
+			challengesPanel.add(emptyChallenges);
+		}
+
+		challengesPanel.revalidate();
 	}
 
 	public void updateAll()

@@ -168,6 +168,9 @@ public class PartyGamesPlugin extends Plugin
 		long localMemberId = partyService.getLocalMember().getMemberId();
 		ChallengeEvent challengeEvent = challenge.getChallengeEvent();
 		pendingChallenges.remove(challenge);
+
+		//TODO maybe variable for lobby panel
+		panel.getPartyGamesLobbyPanel().updateChallengeState();
 		panel.getPartyGamesLobbyPanel().updatePendingChallenges(pendingChallenges);
 
 		if (localMemberId == challengeEvent.getFromId() || localMemberId == challengeEvent.getToId())
