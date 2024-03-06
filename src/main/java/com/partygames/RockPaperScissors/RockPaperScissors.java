@@ -133,7 +133,6 @@ public class RockPaperScissors implements Game
 	@Subscribe
 	public void onMoveEvent(MoveEvent event)
 	{
-		log.debug("onMoveEvent");
 		if (!event.getChallengeId().equals(challenge.getChallengeEvent().getChallengeId()) || state != State.WAITING_PLAYER_MOVE)
 		{
 			return;

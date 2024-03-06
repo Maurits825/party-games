@@ -29,7 +29,6 @@ import net.runelite.client.party.PartyService;
 import net.runelite.client.party.WSClient;
 import net.runelite.client.party.events.UserJoin;
 import net.runelite.client.party.events.UserPart;
-import net.runelite.client.party.messages.UserSync;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -129,7 +128,6 @@ public class PartyGamesPlugin extends Plugin
 		{
 			return;
 		}
-		log.debug("onUserJoin");
 		SwingUtilities.invokeLater(() -> lobbyPanel.addPartyMember(partyService.getMemberById(event.getMemberId())));
 	}
 
@@ -150,15 +148,8 @@ public class PartyGamesPlugin extends Plugin
 	}
 
 	@Subscribe
-	public void onUserSync(final UserSync event)
-	{
-		log.debug("onUserSync"); //TODO do stuff?
-	}
-
-	@Subscribe
 	public void onPartyChanged(final PartyChanged event)
 	{
-		log.debug("onPartyChanged");
 		SwingUtilities.invokeLater(lobbyPanel::removeAllPartyMembers);
 	}
 
@@ -189,7 +180,6 @@ public class PartyGamesPlugin extends Plugin
 	@Subscribe
 	public void onAcceptChallengeEvent(AcceptChallengeEvent acceptChallengeEvent)
 	{
-		log.debug("on accept challenge event");
 		Challenge challenge = null;
 		for (Challenge c : pendingChallenges)
 		{

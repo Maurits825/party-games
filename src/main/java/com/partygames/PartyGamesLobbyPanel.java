@@ -96,13 +96,11 @@ public class PartyGamesLobbyPanel extends JPanel
 
 		testButton1.addActionListener(e ->
 		{
-			log.info("add active game");
 			addActiveGame();
 		});
 
 		testButton2.addActionListener(e ->
 		{
-			log.info("refresh view");
 			updateAllPartyMemberBanner();
 			updateParty();
 		});
