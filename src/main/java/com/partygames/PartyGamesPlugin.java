@@ -37,7 +37,8 @@ import net.runelite.client.util.ImageUtil;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Party Games"
+	name = "Party Games",
+	description = "Play games with your party"
 )
 public class PartyGamesPlugin extends Plugin
 {

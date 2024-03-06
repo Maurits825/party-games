@@ -1,2 +1,3 @@
 # Party Games
-Play games with your party. Require the Discord plugin to be enabled.
+
+Play games with your party using the Party plugin.
