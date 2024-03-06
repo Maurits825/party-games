@@ -189,10 +189,17 @@ public class PartyGamesPlugin extends Plugin
 		long localPlayerId = partyService.getLocalMember().getMemberId();
 		for (Challenge challenge : pendingChallenges)
 		{
-			if (gameType == challenge.getChallengeEvent().getGameType() && (
-				localPlayerId == challenge.getChallenger().getMemberId() ||
-					localPlayerId == challenge.getChallengee().getMemberId()
-			))
+			if (gameType != challenge.getChallengeEvent().getGameType())
+			{
+				continue;
+			}
+
+			if (localPlayerId == challenge.getChallenger().getMemberId() && member.getMemberId() == challenge.getChallengee().getMemberId())
+			{
+				return true;
+			}
+
+			if (localPlayerId == challenge.getChallengee().getMemberId() && member.getMemberId() == challenge.getChallenger().getMemberId())
 			{
 				return true;
 			}

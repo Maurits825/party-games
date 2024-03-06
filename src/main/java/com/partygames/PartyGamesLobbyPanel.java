@@ -130,9 +130,15 @@ public class PartyGamesLobbyPanel extends JPanel
 		partyMembersPanel.removeAll();
 		partyMemberBanners.clear();
 
+		//TODO maybe have this in plugin with getter
+		long localPlayerId = plugin.getPartyService().getLocalMember().getMemberId();
 		for (PartyMember member : partyMembers)
 		{
-			log.debug("banner - party member: " + member.getDisplayName());
+			if (localPlayerId == member.getMemberId())
+			{
+				continue;
+			}
+
 			PartyMemberBanner memberBanner = new PartyMemberBanner(plugin.getPartyService(), member, plugin);
 			partyMemberBanners.add(memberBanner);
 			partyMembersPanel.add(memberBanner);
