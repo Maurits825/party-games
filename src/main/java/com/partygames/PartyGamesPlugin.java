@@ -1,13 +1,13 @@
 package com.partygames;
 
 import com.google.inject.Provides;
-import com.partygames.CoinFlip.CoinFlip;
-import com.partygames.RockPaperScissors.RockPaperScissors;
+import com.partygames.coinflip.CoinFlip;
 import com.partygames.data.Challenge;
 import com.partygames.data.Game;
 import com.partygames.data.GameType;
 import com.partygames.data.events.AcceptChallengeEvent;
 import com.partygames.data.events.ChallengeEvent;
+import com.partygames.rockpaperscissors.RockPaperScissors;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;

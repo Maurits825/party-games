@@ -1,4 +1,4 @@
-package com.partygames.CoinFlip;
+package com.partygames.coinflip;
 
 import java.util.UUID;
 import lombok.EqualsAndHashCode;

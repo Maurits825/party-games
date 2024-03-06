@@ -1,4 +1,4 @@
-package com.partygames.RockPaperScissors;
+package com.partygames.coinflip;
 
 import com.partygames.data.Challenge;
 import java.awt.BorderLayout;
@@ -22,40 +22,39 @@ import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.components.PluginErrorPanel;
 import net.runelite.client.util.ImageUtil;
 
-public class RockPaperScissorsPanel extends JPanel
+public class CoinFlipPanel extends JPanel
 {
 	private static final String ERROR_PANEL = "ERROR_PANEL";
-	private static final String RPS_PANEL = "RPS_PANEL";
+	private static final String COIN_FLIP_PANEL = "COIN_PANEL";
 
 	private final CardLayout cardLayout = new CardLayout();
 
-	private final JPanel rpsPanel = new JPanel();
+	private final JPanel coinFlipPanel = new JPanel();
 	private final JPanel container = new JPanel(cardLayout);
-
-	private final JLabel status = new JLabel();
-	private JPanel movesPanel;
-
 	private final PluginErrorPanel errorPanel = new PluginErrorPanel();
 
+	private final JLabel status = new JLabel();
+	private JPanel pickPanel;
+
 	@Inject
-	private RockPaperScissorsPanel()
+	private CoinFlipPanel()
 	{
 		setLayout(new BorderLayout());
 		setBackground(ColorScheme.DARK_GRAY_COLOR);
 		setBorder(new EmptyBorder(5, 5, 5, 5));
 
-		rpsPanel.setLayout(new BoxLayout(rpsPanel, BoxLayout.Y_AXIS));
-		rpsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-		rpsPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		coinFlipPanel.setLayout(new BoxLayout(coinFlipPanel, BoxLayout.Y_AXIS));
+		coinFlipPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+		coinFlipPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
 		JPanel errorWrapper = new JPanel(new BorderLayout());
 		errorWrapper.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		errorWrapper.add(errorPanel, BorderLayout.NORTH);
 
-		errorPanel.setContent("No active rock paper scissors game",
+		errorPanel.setContent("No active coin flip game",
 			"In the lobby tab you can challenge party members.");
 
-		container.add(rpsPanel, RPS_PANEL);
+		container.add(coinFlipPanel, COIN_FLIP_PANEL);
 		container.add(errorWrapper, ERROR_PANEL);
 
 		cardLayout.show(container, ERROR_PANEL);
@@ -63,14 +62,42 @@ public class RockPaperScissorsPanel extends JPanel
 		add(container, BorderLayout.NORTH);
 	}
 
-	public void initialize(RockPaperScissors rockPaperScissors)
+	public void initialize(CoinFlip coinFlip)
 	{
-		rpsPanel.removeAll();
+		coinFlipPanel.removeAll();
 
-		Challenge challenge = rockPaperScissors.getChallenge();
+		Challenge challenge = coinFlip.getChallenge();
+		JPanel headerPanel = getHeaderPanel(challenge);
+		coinFlipPanel.add(headerPanel);
 
-		//TODO long user names
-//		JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
+		JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+		statusPanel.setBorder(new EmptyBorder(5, 0, 0, 0));
+		statusPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		status.setText(coinFlip.getStatusText());
+		statusPanel.add(status);
+		coinFlipPanel.add(statusPanel);
+
+		if (coinFlip.isLocalPlayerMove())
+		{
+			pickPanel = createCoinPickPanel(coinFlip);
+			coinFlipPanel.add(pickPanel);
+		}
+
+		cardLayout.show(container, COIN_FLIP_PANEL);
+	}
+
+	public void update(CoinFlip coinFlip)
+	{
+		if (pickPanel != null)
+		{
+			pickPanel.setVisible(coinFlip.isLocalPlayerMove());
+		}
+
+		status.setText(coinFlip.getStatusText());
+	}
+
+	private JPanel getHeaderPanel(Challenge challenge)
+	{
 		JPanel headerPanel = new JPanel(new DynamicGridLayout(1, 5));
 		headerPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		headerPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
@@ -80,28 +107,28 @@ public class RockPaperScissorsPanel extends JPanel
 		headerPanel.add(new JLabel("vs"));
 		headerPanel.add(getAvatar(challenge.getChallengee()));
 		headerPanel.add(new JLabel(challenge.getChallengee().getDisplayName()));
-
-		rpsPanel.add(headerPanel);
-
-		JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-		statusPanel.setBorder(new EmptyBorder(5, 0, 0, 0));
-		statusPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		status.setText(rockPaperScissors.getStatusText());
-		statusPanel.add(status);
-		rpsPanel.add(statusPanel);
-
-		movesPanel = createMovesPanel(rockPaperScissors);
-		rpsPanel.add(movesPanel);
-
-		cardLayout.show(container, RPS_PANEL);
+		return headerPanel;
 	}
 
-	public void update(RockPaperScissors rockPaperScissors)
+	private JPanel createCoinPickPanel(CoinFlip coinFlip)
 	{
-		movesPanel.setVisible(rockPaperScissors.isLocalPlayerMove());
-		status.setText(rockPaperScissors.getStatusText());
+		JPanel pickPanel = new JPanel(new GridLayout(1, 2));
+		pickPanel.setBorder(new EmptyBorder(5, 0, 0, 0));
+		pickPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+
+		for (CoinFlip.CoinSide coinSide : CoinFlip.CoinSide.values())
+		{
+			JButton coinButton = new JButton();
+			coinButton.setText(coinSide.getText());
+			coinButton.setFocusable(false);
+			coinButton.addActionListener(e -> coinFlip.flip(coinSide));
+			pickPanel.add(coinButton);
+		}
+
+		return pickPanel;
 	}
 
+	//TODO put in utils?
 	private JLabel getAvatar(PartyMember member)
 	{
 		JLabel avatar = new JLabel();
@@ -118,23 +145,5 @@ public class RockPaperScissorsPanel extends JPanel
 		}
 
 		return avatar;
-	}
-
-	private JPanel createMovesPanel(RockPaperScissors rockPaperScissors)
-	{
-		JPanel movesPanel = new JPanel(new GridLayout(1, 3));
-		movesPanel.setBorder(new EmptyBorder(5, 0, 0, 0));
-		movesPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-
-		for (RockPaperScissors.Move move : RockPaperScissors.Move.values())
-		{
-			JButton moveButton = new JButton();
-			moveButton.setText(move.getText());
-			moveButton.setFocusable(false);
-			moveButton.addActionListener(e -> rockPaperScissors.move(move));
-			movesPanel.add(moveButton);
-		}
-
-		return movesPanel;
 	}
 }

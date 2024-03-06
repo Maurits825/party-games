@@ -1,7 +1,7 @@
 package com.partygames;
 
-import com.partygames.CoinFlip.CoinFlipPanel;
-import com.partygames.RockPaperScissors.RockPaperScissorsPanel;
+import com.partygames.coinflip.CoinFlipPanel;
+import com.partygames.rockpaperscissors.RockPaperScissorsPanel;
 import java.awt.BorderLayout;
 import javax.inject.Inject;
 import javax.swing.JPanel;

@@ -1,4 +1,4 @@
-package com.partygames.CoinFlip;
+package com.partygames.coinflip;
 
 import com.partygames.data.Challenge;
 import com.partygames.data.Game;

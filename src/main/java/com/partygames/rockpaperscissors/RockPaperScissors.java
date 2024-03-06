@@ -1,6 +1,5 @@
-package com.partygames.RockPaperScissors;
+package com.partygames.rockpaperscissors;
 
-import com.partygames.RockPaperScissors.events.MoveEvent;
 import com.partygames.data.Challenge;
 import com.partygames.data.Game;
 import java.awt.Color;

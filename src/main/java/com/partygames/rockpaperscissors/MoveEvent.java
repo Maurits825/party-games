@@ -1,6 +1,5 @@
-package com.partygames.RockPaperScissors.events;
+package com.partygames.rockpaperscissors;
 
-import com.partygames.RockPaperScissors.RockPaperScissors;
 import java.util.UUID;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
