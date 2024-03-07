@@ -230,7 +230,12 @@ public class PartyGamesPlugin extends Plugin
 
 	public boolean pendingChallengeExists(PartyMember member, GameType gameType)
 	{
-		long localPlayerId = partyService.getLocalMember().getMemberId();
+		Long localPlayerId = getLocalPlayerId();
+		if (localPlayerId == null)
+		{
+			return false;
+		}
+
 		for (Challenge challenge : pendingChallenges)
 		{
 			if (gameType != challenge.getChallengeEvent().getGameType())
