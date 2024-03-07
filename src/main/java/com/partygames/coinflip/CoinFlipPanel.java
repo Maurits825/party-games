@@ -121,7 +121,11 @@ public class CoinFlipPanel extends JPanel
 			JButton coinButton = new JButton();
 			coinButton.setText(coinSide.getText());
 			coinButton.setFocusable(false);
-			coinButton.addActionListener(e -> coinFlip.flip(coinSide));
+			coinButton.addActionListener(e ->
+			{
+				coinButton.setEnabled(false);
+				coinFlip.flip(coinSide);
+			});
 			pickPanel.add(coinButton);
 		}
 

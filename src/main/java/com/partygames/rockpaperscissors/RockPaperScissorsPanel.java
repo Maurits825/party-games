@@ -131,7 +131,11 @@ public class RockPaperScissorsPanel extends JPanel
 			JButton moveButton = new JButton();
 			moveButton.setText(move.getText());
 			moveButton.setFocusable(false);
-			moveButton.addActionListener(e -> rockPaperScissors.move(move));
+			moveButton.addActionListener(e ->
+			{
+				moveButton.setEnabled(false);
+				rockPaperScissors.move(move);
+			});
 			movesPanel.add(moveButton);
 		}
 
