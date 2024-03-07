@@ -21,13 +21,11 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.components.DragAndDropReorderPane;
 import net.runelite.client.ui.components.PluginErrorPanel;
 
-@Slf4j
 public class PartyGamesLobbyPanel extends JPanel
 {
 	private final PartyGamesPlugin plugin;
@@ -63,29 +61,7 @@ public class PartyGamesLobbyPanel extends JPanel
 		layoutPanel.setLayout(boxLayout);
 		layoutPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
-		final JPanel topPanel = new JPanel();
-		topPanel.setBorder(new EmptyBorder(0, 0, 4, 0));
-		topPanel.setLayout(new GridBagLayout());
-
-		GridBagConstraints c = new GridBagConstraints();
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.insets = new Insets(0, 2, 4, 2);
-
-		c.gridx = 0;
-		c.gridy = 0;
-		topPanel.add(testButton1, c);
-
-		c.gridx = 1;
-		c.gridy = 0;
-		topPanel.add(testButton2, c);
-
-		testButton1.setText("Add game");
-		testButton1.setFocusable(false);
-
-		testButton2.setText("Refresh");
-		testButton2.setFocusable(false);
-
-		layoutPanel.add(topPanel);
+		layoutPanel.add(createButtonPanel());//TODO remove or debug only??
 		layoutPanel.add(getHeaderTextPanel("Members"));
 		layoutPanel.add(partyMembersPanel);
 
@@ -93,17 +69,6 @@ public class PartyGamesLobbyPanel extends JPanel
 
 		challengesPanel.setLayout(new BoxLayout(challengesPanel, BoxLayout.Y_AXIS));
 		layoutPanel.add(challengesPanel);
-
-		testButton1.addActionListener(e ->
-		{
-			addActiveGame();
-		});
-
-		testButton2.addActionListener(e ->
-		{
-			updateAllPartyMemberBanner();
-			updateParty();
-		});
 
 		JPanel errorWrapper = new JPanel(new BorderLayout());
 		errorWrapper.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -235,6 +200,44 @@ public class PartyGamesLobbyPanel extends JPanel
 		headerPanel.setBorder(new EmptyBorder(5, 0, 0, 0));
 		headerPanel.add(headerText, BorderLayout.CENTER);
 		return headerPanel;
+	}
+
+	private JPanel createButtonPanel()
+	{
+		final JPanel topPanel = new JPanel();
+		topPanel.setBorder(new EmptyBorder(0, 0, 4, 0));
+		topPanel.setLayout(new GridBagLayout());
+
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 2, 4, 2);
+
+		c.gridx = 0;
+		c.gridy = 0;
+		topPanel.add(testButton1, c);
+
+		c.gridx = 1;
+		c.gridy = 0;
+		topPanel.add(testButton2, c);
+
+		testButton1.setText("Add game");
+		testButton1.setFocusable(false);
+
+		testButton2.setText("Refresh");
+		testButton2.setFocusable(false);
+
+		testButton1.addActionListener(e ->
+		{
+			addActiveGame();
+		});
+
+		testButton2.addActionListener(e ->
+		{
+			updateAllPartyMemberBanner();
+			updateParty();
+		});
+
+		return topPanel;
 	}
 
 	private void addActiveGame()
