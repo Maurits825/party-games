@@ -216,7 +216,7 @@ public class PartyGamesPlugin extends Plugin
 
 	public Long getLocalPlayerId()
 	{
-		if (partyService.isInParty())
+		if (partyService.isInParty() && partyService.getLocalMember() != null)
 		{
 			return partyService.getLocalMember().getMemberId();
 		}

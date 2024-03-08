@@ -214,7 +214,8 @@ public class PartyGamesLobbyPanel extends JPanel
 
 		c.gridx = 0;
 		c.gridy = 0;
-		topPanel.add(testButton1, c);
+		//for testing
+//		topPanel.add(testButton1, c);
 
 		c.gridx = 1;
 		c.gridy = 0;

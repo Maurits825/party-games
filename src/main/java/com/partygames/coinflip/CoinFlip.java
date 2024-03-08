@@ -42,7 +42,7 @@ public class CoinFlip implements Game
 	private final PartyService partyService;
 	private final CoinFlipPanel panel;
 	private final Client client;
-	private final long localPlayerId;
+	private long localPlayerId;
 
 	private CoinFlipEvent flipEvent;
 
@@ -78,6 +78,7 @@ public class CoinFlip implements Game
 		this.challenge = challenge;
 		state = State.WAITING_PICK;
 
+		localPlayerId = partyService.getLocalMember().getMemberId();
 		isLocalPlayerMove = localPlayerId == challenge.getChallengee().getMemberId();
 
 		panel.initialize(this);

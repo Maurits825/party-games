@@ -84,7 +84,7 @@ public class RockPaperScissors implements Game
 	private final RockPaperScissorsPanel panel;
 	private final Client client;
 
-	private final long localPlayerId;
+	private long localPlayerId;
 
 	@Getter
 	private boolean isLocalPlayerMove;
@@ -116,6 +116,7 @@ public class RockPaperScissors implements Game
 		isLocalPlayerMove = true;
 		state = State.WAITING_PLAYER_MOVE;
 
+		localPlayerId = partyService.getLocalMember().getMemberId();
 		player1 = new RpsPlayer(challenge.getChallenger(), localPlayerId);
 		player2 = new RpsPlayer(challenge.getChallengee(), localPlayerId);
 
